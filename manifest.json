@@ -2,6 +2,7 @@
   "name": "Budget App",
   "short_name": "Budget",
   "start_url": "index.html",
+  "id": "/budget-app/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
@@ -14,6 +15,19 @@
     {
       "src": "icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "640x480",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "320x480",
       "type": "image/png"
     }
   ]
