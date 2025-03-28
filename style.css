@@ -1,0 +1,313 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    color: #3e3e3e;
+
+    /* disable horizontal scrolling */
+    max-width: 100vw;
+    overflow-x: hidden
+
+}
+
+#main {
+    text-align: center;
+    /* margin-top: 5em; */
+}
+
+.margin {
+    margin: 40px 20px;
+}
+
+.margin-side {
+    margin: 0 20px;
+}
+
+#div_debts, #div_budget_statistics {
+    background-color: rgba(255, 205, 86, 0.5);
+    padding: 0.5em;
+}
+
+button,
+.button {
+    font-size: 16px;
+    display: inline-block;
+    height: 35px;
+    background-color: #007AFB;
+    color: white;
+    padding-left: 1em;
+    padding-right: 1em;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#div_submit button:hover {
+    background-color: #007AFB;
+    transition: 0.15s;
+}
+
+#div_submit button:active {
+    background-color: #034286;
+    transition: 0.15s;
+}
+
+#div_submit button:disabled {
+    background-color: #707070;
+    cursor: not-allowed;
+}
+
+input[name="inp_description"],
+input[type=text],
+input[type=date],
+input[type=number] {
+    padding: 10px;
+    border: solid 1px #dcdcdc;
+    transition: box-shadow 0.3s, border 0.3s;
+    height: 2.5em;
+    width: 5em;
+    text-align: center;
+    color: #3e3e3e;
+}
+
+input[name="inp_description"],
+input[type=text] {
+    /*width: 80%;*/
+    /*width: 100%;*/
+    width: 20em;
+    text-align: left;
+}
+
+#inp_price {
+    width: 80%;
+    height: 2em;
+    /*    inline */
+    display: inline-block;
+}
+
+input[name="inp_description"]:focus,
+input[type=text]:focus,
+select:focus,
+input[type=date]:focus,
+input[type=number]:focus {
+    outline-width: 0;
+    border: solid 1px #707070;
+}
+
+input[name="inp_description"]:hover,
+input[type=text]:hover,
+select:hover,
+input[type=date]:hover {
+    /*border: solid 1px #707070;*/
+}
+
+#div_price {
+    font-size: 4em;
+    text-align: center;
+}
+
+#inp_price {
+    font-size: 1em;
+    text-align: center;
+}
+
+
+#div_categories {
+    text-align: center;
+}
+
+
+#lbl_name {
+    /* underline */
+    text-decoration: underline;
+    cursor: pointer;
+    color: #007AFB;
+}
+
+
+/* ol: remove numbering */
+ol {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.expensesHead {
+    font-weight: bold;
+}
+
+ol span {
+    width: 4em;
+    display: inline-flex;
+    height: 1em;
+    margin: .05em 0 .05em 0;
+}
+
+
+.slip-swiping-container {
+    overflow-x: hidden;
+}
+
+.slip-reordering {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+td button {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    /* color: #3e3e3e; */
+    color: #007AFB;
+    text-decoration: underline;
+}
+
+.btn-group {
+    display: inline-flex;
+    /*width: 16em;*/
+    /*justify-content: space-between;*/
+}
+
+#inp_description {
+    /*width: 15.6em;*/
+    width: 100%;
+    text-align: left;
+}
+
+/* show spans side by side */
+.expenseHistory {
+    list-style-type: none;
+    border: none;
+    padding: 0;
+    /* margin: 0.5em; */
+    margin: 0;
+}
+
+.expenseItem {
+    display: flex;
+    border: none;
+    padding: 0.5em;
+    /* margin: 0.5em; */
+}
+
+.expenseItem:focus, .expenseItem:hover {
+    background-color: #f0f0f0;
+}
+
+.leftSpan {
+    flex: 0 0 10%;
+    text-align: center;
+    margin-right: 1em;
+    /* Fixed width for left span */
+}
+
+.centerSpan {
+    flex-grow: 1;
+    /* Takes up remaining space */
+}
+
+.rightSpan {
+    flex: 0 0 28%;
+    text-align: center;
+}
+
+.expenseItemDay {
+    /* position: relative; */
+    /* left: 3px; */
+}
+
+.expenseItemBot,
+.expenseTotal {
+    font-size: 0.8em;
+    color: #0000009c;
+}
+
+.blue {
+    color: rgb(0, 122, 251);
+}
+
+.donut-inner {
+    height: 0;
+    width: 0;
+    position: relative;
+    top: -50vw;
+    left: 20vw;
+}
+
+
+#div_expenses {
+    text-align: left;
+    width: 100%;
+}
+
+
+.side-by-side {
+    display: flex; /* Use flexbox to arrange the divs side by side */
+    justify-content: space-between; /* Distribute the space between the divs */
+    align-items: center; /* Vertically center the content */
+}
+
+.left-div {
+    /* Optional styles for the left div */
+    margin-right: 10px; /* Add some spacing to the right of the left div */
+}
+
+.middle-div {
+    display: flex; /* Use flexbox to arrange the content inside the middle div */
+    align-items: center; /* Vertically center the content within the middle div */
+}
+
+
+button {
+    flex: 0 0 auto;
+    /* Prevent the button from growing */
+    margin-left: 10px;
+    /* Add some space between the two elements */
+}
+
+.refreshExpensesButton {
+    width: 30px;
+    height: 30px;
+    padding: 2px;
+    color: #585858;
+    background-color: white
+}
+
+#lbl_month {
+    font-weight: bold;
+    color: #007AFB;
+}
+
+.green {
+    color: #00b300;
+}
+
+.put_selects_side_by_side {
+    display: flex;
+    justify-content: space-between;
+}
+
+.put_textsboxes_side_by_side {
+    display: flex;
+    justify-content: space-between;
+}
+
+.put_textsboxes_side_by_side input {
+    width: 100%;
+}
+
+.put_slider_and_label_side_by_side {
+    display: flex;
+    justify-content: space-between;
+}
+
+.put_slider_and_label_side_by_side input {
+    width: 100%;
+}
+
+.vert-margin-sm {
+    margin: 0.8em 0 0.8em 0;
+}
+
+.swiper-slide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}

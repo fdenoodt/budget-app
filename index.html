@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- refreshing icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- swiper -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css"/>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+
+    <link rel="icon" type="image/png" href="fav.png"/>
+    <link rel="stylesheet" href="style.css?version=53">
+    <link rel="manifest" href="/manifest.json">
+
+</head>
+
+<body>
+<!--disable horizontal scroll-->
+<div id="main" style="overflow-x: hidden;">
+    <div id="div_debts">
+        <!-- Shows debt for Fabian and Elisa  -->
+        <span id="lbl_name_has_debt">##</span> moet <span id="lbl_name_no_debt">##</span> <span
+            id="lbl_debt">##</span>
+        EUR.
+    </div>
+
+    <div id="div_price" class="margin">
+        <!-- round up to 2 decimals -->
+        <span>€</span> <input type="number" name="inp_price" id="inp_price" autofocus placeholder="0,00"
+                              class="form-control">
+    </div>
+
+    <div class="margin">
+        <div class="put_slider_and_label_side_by_side vert-margin-sm">
+            <span id="lbl_percent" style="vertical-align: top">##</span> &nbsp;
+            <input type="range" name="inp_ratio" id="inp_ratio" min="0" max="100" value="100" step="10">
+        </div>
+
+        <div class="put_textsboxes_side_by_side vert-margin-sm">
+            <input type="number" name="inp_price_me" id="inp_price_me" min="0" placeholder="Me" class="form-control">
+            &nbsp;
+            <input type="number" name="inp_price_other" id="inp_price_other" min="0" placeholder="Other"
+                   class="form-control">
+        </div>
+    </div>
+
+
+    <!--Categories-->
+    <div id="div_categories" class="margin">
+        <div class="put_selects_side_by_side vert-margin-sm">
+            <!-- USE HTML SELECT-TAG INSTEAD (A select tag for `Basics`, `Fun` and `Infrequent`) all items automatically added to the list using javascript -->
+            <!-- Basics -->
+            <select class="form-select" id="lst_categories_basics" style="width: 33%;" onchange="chooseCategory(this)">
+                <option selected disabled>🍎 Basics</option>
+            </select>
+
+            <!-- Fun -->
+            <select class="form-select" id="lst_categories_fun" style="width: 33%" onchange="chooseCategory(this)">
+                <option selected disabled>🎉 Fun</option>
+            </select>
+
+            <!-- Infrequent -->
+            <select class="form-select" id="lst_categories_infreq" style="width: 33%" onchange="chooseCategory(this)">
+                <option selected disabled>📎 Infreq</option>
+            </select>
+        </div>
+
+        <div class="vert-margin-sm">
+            <input list="descriptions" name="inp_description" id="inp_description" placeholder="Beschrijving"
+                   class="form-select">
+            <!--filled using javascript-->
+            <datalist id="descriptions"></datalist>
+        </div>
+
+    </div>
+
+
+    <div id="div_submit" class="margin">
+        <button name="btn_submit" id="btn_submit" onclick="submit()">Submit</button>
+    </div>
+
+    <div id="profile_name" class="margin" style="text-align: left;">
+        Betaald door <span id="lbl_name" onclick="editName()">##</span>.
+    </div>
+
+
+    <div id="div_statistics" class="margin">
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <div style="margin-bottom: -4em; position: relative; top: -3em;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    Totaal uitgegeven de laatste 7 dagen
+                    <div id="expenses_last_n_days">
+                        <!-- Graph-->
+                        <canvas id="expenses_last_n_days_chart"></canvas>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <span
+                            data-toggle="tooltip" data-placement="top"
+                            title="Effectieve waarden die naar het spaarvarkentje gingen (behalve de laatste maand, omdat deze nog niet volledig is afgerond).
+                            Berekening: Spaarvarkentje = Inkomen - werkelijke uitgaven - investeringen (80% van het inkomen na geschatte kosten)">
+                    Bedrag in het spaarvarkentje
+                    </span>
+                    <style>
+                        .tooltip-inner {
+                            max-width: 500px; /* Adjust the width as needed */
+                            white-space: pre-wrap;
+                        }
+                    </style>
+
+                    <div id="savings_per_month_in_money_pig">
+                        <!-- Graph-->
+                        <canvas id="savingsChartPig"></canvas>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <span
+                            data-toggle="tooltip" data-placement="top"
+                            title="Investeringen, berekent op loon (onafhankelijk van de werkelijke uitgaven).
+                            Berekening: (Inkomen - huur - allowance)*80%">
+                        Bedrag in investeringen
+                    </span>
+                    <div id="savings_per_month_in_investments">
+                        <!-- Graph-->
+                        <canvas id="savingsChartInvestments"></canvas>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    Totaal verdiend
+                    <div id="earnings_per_month">
+                        <!-- Graph-->
+                        <canvas id="earningsChart"></canvas>
+                    </div>
+                    <div style="font-size: 0.8em;">
+                        On average, you earned <span id="earnings_avg" style="color: #4BC0C0;">##</span> per month.
+                        Total yearly earned: <span id="earnings_total" style="color: #4BC0C0;">##k</span>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="div_budget_statistics" style="margin-bottom: 0.5em;">
+        </div>
+        <div>
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+
+
+    <div class="side-by-side margin-side">
+        <div class="left-div" style="font-size: 1.1em;">
+        </div>
+        <div class="middle-div">
+
+            <div style="position: relative; top: 8px;">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center pagination">
+
+                        <li class="page-item">
+                            <a class="page-link" onclick="showOnlyPaidByMe()">
+                                <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0b0;</i>
+                            </a>
+                        </li>
+
+                        <li class="page-item"> <!-- remove filters on expense list -->
+                            <a class="page-link" onclick="clearExpensesFilter()">
+                                <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0c9;</i>
+                            </a>
+                        </li>
+                        <li id="paginationPrev" class="page-item">
+                            <a id="paginationPrevChild" class="page-link">&laquo;</a>
+                        </li>
+                        <li id="paginationCurr" class="page-item active">
+                            <a id="paginationCurrChild" class="page-link">##</a>
+                        </li>
+                        <li id="paginationNext" class="page-item disabled"><a id="paginationNextChild"
+                                                                              class="page-link">&raquo;</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="div_expenses">
+        <ul id="ul_expenses_all" class="expenseHistory">
+        </ul>
+    </div>
+
+
+</div>
+<!-- Optional JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+<script src="script.js?version=53"></script>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
+        $(this).tooltip('hide');
+    });
+
+    const categories_basics_keys = ['Boodschappen', 'Bakker', 'Gezondheid en verzorging', 'Transport', 'Auto']
+    const categories_basics_names = ['Boodschappen', 'Bakker', 'Gezondheid & verzorging', 'Openbaar vervoer', 'Auto']
+
+    const categories_fun_keys = ['Restaurant', 'Café en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
+    const categories_fun_names = ['Restaurant', 'Café & Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
+
+    const categories_infreq_keys = ['Abonnementen', 'Kleding', 'Schoenen', 'Kapper', 'Gifts', 'Reizen', 'Meubels en Interieur', 'Zelfontwikkeling', 'ICT', 'Maandelijks', 'Uitzonderlijk']
+    const categories_infreq_names = ['Abonnementen', 'Kleding', 'Schoenen', 'Kapper', 'Gifts', 'Reizen', 'Meubels & Interieur', 'Zelfontwikkeling', 'ICT', 'Maandelijks', 'Uitzonderlijk']
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+
+        // default input ratio: 100 for Fabian, 50 for Elisa
+        if (getName() == FABIAN) {
+            inp_ratio.value = 100;
+        } else {
+            inp_ratio.value = 50;
+        }
+
+        fillCategoriesList();
+        holidayImmediatelyFillInCategory();
+
+        lbl_percent.innerHTML = inp_ratio.value + '%';
+        readName();
+        updateDebtsAndExpensesAll();
+        checkSubmit();
+        updateNavigationButtons()
+
+
+        // submit button enabled when all fields are filled in
+        btn_submit.disabled = true;
+
+        // Initialize swiper
+        new Swiper('.swiper-container', {
+            direction: 'horizontal',
+            loop: false,
+        });
+    });
+</script>
+
+<script>
+    <!-- PWA -->
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+    }
+</script>
+
+</body>
+
+</html>
