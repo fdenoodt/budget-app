@@ -26,6 +26,12 @@ body {
     padding: 0.5em;
 }
 
+#div_amsterdam_statistics {
+    /*background-color: rgba(255, 205, 86, 0.5);*/
+    background-color: rgba(164, 223, 223, 1.0);
+    padding: 0.5em;
+}
+
 button,
 .button {
     font-size: 16px;

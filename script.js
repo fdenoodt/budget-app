@@ -110,6 +110,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
     betterFetch(fullUrl)
         .then(response => response.json())
         .then(data => {
+            console.log(data)
             const fabian = data.fabian; // eg: +14.00
             const elisa = data.elisa; // eg: +12.00
 
@@ -165,6 +166,9 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             updateDonut(groupedExenses, moneyPigMax = computeMoneyPig(monthlySaved)[0],
                 moneyPigCurrentMonthTarget = monthlySaved[monthlySaved.length - 1].target_only_pig, // look at the last month
                 toInvestCurrentMonh = monthlySaved[monthlySaved.length - 1].target_only_investments);
+
+            updateAmsterdamStatistics(data.amsterdam_grouped_expenses)
+
 
             updateBar(groupedExenses, expenses);
 
@@ -683,6 +687,35 @@ const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_add
     });
 }
 
+const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
+    // amsterdamGroupedExpenses: [
+    // {category:Amsterdam - OV, price_fabian: 10, price_elisa: 20},
+    // {category:Amsterdam Boodschappen, price_fabian: 10, price_elisa: 20},
+    // {category:Amsterdam Housing, price_fabian: 10, price_elisa: 20},
+    // ]
+
+    if (getName() === ELISA) {
+        const div_amsterdam_statistics = document.getElementById('div_amsterdam_statistics');
+        // display none
+        div_amsterdam_statistics.style.display = 'none';
+        return
+    }
+
+    const consumables = amsterdamGroupedExpenses.filter(expense => expense.category.toLowerCase().includes('amsterdam boodschappen') && expense.category.toLowerCase().includes('boodschappen')).reduce((a, b) => a + (getName() === FABIAN ? b.price_fabian : b.price_elisa), 0);
+    const public_transport = amsterdamGroupedExpenses.filter(expense => expense.category.toLowerCase().includes('amsterdam - ov')).reduce((a, b) => a + (getName() === FABIAN ? b.price_fabian : b.price_elisa), 0);
+    const housing = amsterdamGroupedExpenses.filter(expense => expense.category.toLowerCase().includes('amsterdam housing')).reduce((a, b) => a + (getName() === FABIAN ? b.price_fabian : b.price_elisa), 0);
+
+
+    const div_amsterdam_statistics = document.getElementById('div_amsterdam_statistics');
+    div_amsterdam_statistics.innerHTML = `
+        🍞<span data-toggle="tooltip" data-placement="top" title="Consumables">${consumables.toFixed(0)}</span> +
+        🚍<span data-toggle="tooltip" data-placement="top" title="Public transport">${public_transport.toFixed(0)}</span> +
+        🏠<span data-toggle="tooltip" data-placement="top" title="Housing">${housing.toFixed(0)}</span>
+        = ${(consumables + public_transport + housing).toFixed(0)} / 8448.00
+    `;
+
+}
+
 const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInvestCurrentMonth) => {
     // groupedExenses:
     // eg [{category: "Groceries", price_fabian: 10, price_elisa: 20}, ... ]
@@ -1133,6 +1166,11 @@ const fillCategoriesList = () => {
         option.value = key;
         option.innerHTML = name;
         lst_categories_basics.appendChild(option);
+
+        // add a line break after the 3rd last option (to seperatate amsterdam costs
+        if (i === categories_basics_keys.length - 4) {
+            lst_categories_basics.appendChild(document.createElement('hr'));
+        }
     }
 
     for (let i = 0; i < categories_fun_keys.length; i++) {

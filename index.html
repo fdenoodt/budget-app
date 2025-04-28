@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=53">
+    <link rel="stylesheet" href="style.css?version=54">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -155,6 +155,9 @@
 
         <div id="div_budget_statistics" style="margin-bottom: 0.5em;">
         </div>
+
+        <div id="div_amsterdam_statistics" style="margin-bottom: 0.5em;">
+        </div>
         <div>
             <canvas id="barChart"></canvas>
         </div>
@@ -217,7 +220,7 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="script.js?version=53"></script>
+<script src="script.js?version=54"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -226,6 +229,16 @@
 
     const categories_basics_keys = ['Boodschappen', 'Bakker', 'Gezondheid en verzorging', 'Transport', 'Auto']
     const categories_basics_names = ['Boodschappen', 'Bakker', 'Gezondheid & verzorging', 'Openbaar vervoer', 'Auto']
+
+    if (getName() === FABIAN) {
+        // append amsterdam keys
+        const amsKeys = ['Amsterdam Boodschappen', 'Amsterdam - OV', 'Amsterdam Housing']
+        amsKeys.forEach((item) => {
+            categories_basics_keys.push(item);
+            categories_basics_names.push(item);
+        });
+    }
+
 
     const categories_fun_keys = ['Restaurant', 'Café en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
     const categories_fun_names = ['Restaurant', 'Café & Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
@@ -237,7 +250,7 @@
 
 
         // default input ratio: 100 for Fabian, 50 for Elisa
-        if (getName() == FABIAN) {
+        if (getName() === FABIAN) {
             inp_ratio.value = 100;
         } else {
             inp_ratio.value = 50;
