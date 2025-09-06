@@ -39,11 +39,13 @@ function authenticate(isForceAuthenticate = false) {
 }
 
 function handleError(err) {
-    if (err === `SyntaxError: Unexpected token 'U', "Unauthorized Access" is not valid JSON`) {
+    const errMessage = err.toString()
+    if (errMessage.includes("Unauthorized Access")) {
+        // probably unauthorized access
         authenticate(true)
         location.reload()
     } else {
-        alert("Error: " + err)
+        console.error(err)
     }
 }
 
@@ -94,13 +96,8 @@ const computeMoneyPig = (monthlySaved) => {
     monthlySaved = monthlySaved.slice(0, monthlySaved.length - 1) // remove the last element
 
     const moneyPigAllTime = monthlySaved.reduce((sum, month) => sum + month.actual_only_pig, 0)
-    // slice func removes the first n-12 elements, so only the last 12 months are shown
-    // const moneyPigLast12Months = monthlySaved.slice(Math.max(0, monthlySaved.length - 12)) // .slice to only show the last 12 months
-    //     .reduce((sum, month) => sum + month.actual_only_pig, 0)
 
-    // Either take sum of money saved in last 12 months, or if there is debt from older months, that that debt also into account
-    // also return is last 12 months was returned
-    // return [Math.min(moneyPigAllTime, moneyPigLast12Months), moneyPigLast12Months <= moneyPigAllTime] // true if last 12 months was returned
+    console.log("moneyPigAllTime", moneyPigAllTime)
     return [moneyPigAllTime, undefined]
 }
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
@@ -163,6 +160,10 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             updateDebts(fabian, elisa);
             updateExpensesAll(expenses);
 
+            if (monthlySaved.length === 0) {
+                alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
+            }
+
             updateDonut(groupedExenses, moneyPigMax = computeMoneyPig(monthlySaved)[0],
                 moneyPigCurrentMonthTarget = monthlySaved[monthlySaved.length - 1].target_only_pig, // look at the last month
                 toInvestCurrentMonh = monthlySaved[monthlySaved.length - 1].target_only_investments);
@@ -183,8 +184,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
                 maxTrials > 0 ? updateDebtsAndExpensesAll(maxTrials - 1) : handleError(e);
             } else {
                 // just raise the error
-                // todo
-                console.error(e)
+                handleError(e);
             }
         })
 }
