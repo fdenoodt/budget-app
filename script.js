@@ -468,6 +468,10 @@ const filterZip = (arr1, arr2, predicate) => {
 }
 
 const updateBar = (groupedExenses, indivualExpenses) => {
+    // ***
+    // bar chart with categories on y-axis and prices on x-axis
+    // ***
+
     // groupedExenses:
     // eg [{category: "Groceries", price_fabian: 10, price_elisa: 20}, ... ]
     const ctx = document.getElementById('barChart');
@@ -544,8 +548,9 @@ const updateBar = (groupedExenses, indivualExpenses) => {
 
                             return `€${price.toFixed(2)}`;
                         }
-                    }
+                    },
                     // callback after the tooltip has been is closed
+                    events: ['click'], // Change tooltip trigger to click instead of hover
                 }
             }
         },
@@ -661,6 +666,8 @@ const updateBarExpensesLastNDays = (expenses) => {
                             return [`Total: €${total}`, ...expenseDetails];
                         }
                     },
+                    // callback after the tooltip has been is closed
+                    events: ['click'], // Change tooltip trigger to click instead of hover
                     bodyFont: {
                         size: 10 // Set the font size of the tooltip
                     }
