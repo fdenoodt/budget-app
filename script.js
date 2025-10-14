@@ -144,6 +144,50 @@ async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate =
 
 //// end caching
 
+/// loading overlay
+// ---------- Loading overlay helpers ----------
+function createLoadingOverlayIfNeeded() {
+    if (document.getElementById('loading-overlay')) return;
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+#loading-overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:10000;background:rgba(255,255,255,0.7);backdrop-filter: blur(2px);pointer-events:auto;}
+#loading-overlay .spinner{width:48px;height:48px;border:6px solid rgba(0,0,0,0.08);border-top-color:rgba(0,0,0,0.5);border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:10px;}
+#loading-overlay #loading-text{font-family:Roboto, sans-serif;font-size:0.95rem;color:#333;}
+@keyframes spin{to{transform:rotate(360deg)}}
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
+    overlay.innerHTML = `<div class="spinner" aria-hidden="true"></div><div id="loading-text">Updating…</div>`;
+    document.body.appendChild(overlay);
+}
+
+function showLoading(text = 'Updating…') {
+    createLoadingOverlayIfNeeded();
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        document.getElementById('loading-text').textContent = text;
+        overlay.style.display = 'flex';
+        // block pointer events on page
+        document.body.style.pointerEvents = 'none';
+        // but allow interaction with overlay itself
+        overlay.style.pointerEvents = 'auto';
+    }
+    // disable submit button to avoid duplicate submissions
+    if (typeof btn_submit !== 'undefined' && btn_submit) btn_submit.disabled = true;
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.pointerEvents = '';
+    if (typeof btn_submit !== 'undefined' && btn_submit) btn_submit.disabled = false;
+}
+
+/// end loading overlay
+
 const getName = () => {
     return localStorage.getItem('budget_name') || FABIAN;
 }
@@ -192,38 +236,33 @@ const computeMoneyPig = (monthlySaved) => {
 }
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
     const nbMonthsAgo = getMonthFromUrlParam();
-
     const cacheTTL = 1000 * 60 * 10; // 10 minutes - adjust if you want longer
     const fullUrl = `${url}?month=${nbMonthsAgo}`;
 
-    // Use cachedGetJson (stale-while-revalidate)
-    cachedGetJson(fullUrl, {ttl: cacheTTL, staleWhileRevalidate: true})
+    return cachedGetJson(fullUrl, {ttl: cacheTTL, staleWhileRevalidate: true})
         .then(data => {
             console.log("(from cache/network)", data);
-            // existing processing code unchanged:
-            const fabian = data.fabian; // eg: +14.00
-            const elisa = data.elisa; // eg: +12.00
+            // --- your existing processing code (copy/paste) ---
+            const fabian = data.fabian;
+            const elisa = data.elisa;
 
             const expenses = data.expenses;
             const monthlyExpenses = data.monthly_expenses;
 
-            // list of how much saved at month 0, 1, 2, 3, ... (last element is current month)
             const monthlySaved = getName() === FABIAN ? data.savings_of_lifetime_fabian : data.savings_of_lifetime_elisa;
             const monthlyEarned = getName() === FABIAN ? data.earnings_of_lifetime_fabian : data.earnings_of_lifetime_elisa;
 
-            // append monthlyExpenses to expenses
             monthlyExpenses.forEach(expense => {
                 expenses.push(expense);
-                expense.id = -1; // mark as monthly expense
+                expense.id = -1;
             });
 
-            // merge grouped expenses (existing code)
             const groupedExenses = data.grouped_expenses;
             const groupedMonthlyExenses = data.monthly_grouped_expenses;
 
             groupedExenses.forEach(expense => {
                 const category = expense.category;
-                const monthlyExpense = groupedMonthlyExenses.find(expense => expense.category === category);
+                const monthlyExpense = groupedMonthlyExenses.find(e => e.category === category);
                 if (monthlyExpense) {
                     expense.price_fabian += monthlyExpense.price_fabian;
                     expense.price_elisa += monthlyExpense.price_elisa;
@@ -231,7 +270,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             });
             groupedMonthlyExenses.forEach(expense => {
                 const category = expense.category;
-                const monthlyExpense = groupedExenses.find(expense => expense.category === category);
+                const monthlyExpense = groupedExenses.find(e => e.category === category);
                 if (!monthlyExpense) {
                     groupedExenses.push(expense);
                 }
@@ -247,27 +286,35 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
                 alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
             }
 
-            updateDonut(groupedExenses, moneyPigMax = computeMoneyPig(monthlySaved)[0],
-                moneyPigCurrentMonthTarget = monthlySaved[monthlySaved.length - 1].target_only_pig,
-                toInvestCurrentMonh = monthlySaved[monthlySaved.length - 1].target_only_investments);
+            updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
+                monthlySaved[monthlySaved.length - 1].target_only_pig,
+                monthlySaved[monthlySaved.length - 1].target_only_investments);
 
-            updateAmsterdamStatistics(data.amsterdam_grouped_expenses)
+            updateAmsterdamStatistics(data.amsterdam_grouped_expenses);
             updateBar(groupedExenses, expenses);
             updateBarExpensesLastNDays(data.expenses_last_n_days);
-            new LineGraphs().display(monthlySaved, monthlyEarned, nbMonthsAgo); // displays monthly saved and monthly earned graphs
+            new LineGraphs().display(monthlySaved, monthlyEarned, nbMonthsAgo);
 
             ALL_EXPENSES = expenses;
+            // dispatch event so other code can listen if needed
+            window.dispatchEvent(new CustomEvent('data:loaded', {detail: {url: fullUrl, data}}));
+            return data;
         })
         .catch(e => {
-            // if cachedGetJson failed completely, fall back to previous retry logic
             if (e instanceof TypeError && e.message === 'Failed to fetch') {
-                maxTrials > 0 ? updateDebtsAndExpensesAll(maxTrials - 1) : handleError(e);
+                if (maxTrials > 0) {
+                    return updateDebtsAndExpensesAll(maxTrials - 1);
+                } else {
+                    handleError(e);
+                    throw e;
+                }
             } else {
                 handleError(e);
+                throw e;
             }
         });
-
 }
+
 
 class LineGraphs {
     _formatNumber(num) { // eg 2.0k -> 2k, but 2.5k -> 2.5k
@@ -1203,16 +1250,28 @@ const submit = () => {
     betterFetch(fullUrl)
         .then(response => response.json())
         .then(() => {
-            // clear cached month pages so next load shows updated info
-            clearCachePrefix(`${url}?month=`); // now correctly matches encoded keys
-
-            // OPTION A (preferred): refresh data in-place (no full page reload)
-            updateDebtsAndExpensesAll();
-
-            // OPTION B (if you still want a hard reload): location.reload();
-            // location.reload();
+            // show loading overlay while we clear cache and refresh data
+            showLoading('Saving...');
+            // clear the cached month pages
+            clearCachePrefix(`${url}?month=`);
+            // fetch fresh data and update UI (returns promise)
+            return updateDebtsAndExpensesAll();
         })
-        .catch(e => handleError(e));
+        .then(() => {
+            // done — hide overlay
+            hideLoading();
+            // optionally clear the input fields
+            inp_price.value = '';
+            inp_price_me.value = '';
+            inp_price_other.value = '';
+            document.getElementById('inp_description').value = '';
+            data.category = '';
+            checkSubmit();
+        })
+        .catch(e => {
+            hideLoading();
+            handleError(e);
+        });
 
 
 }
@@ -1471,25 +1530,40 @@ class ExpenseListItem {
 
     static deleteExpense(id) {
         const fullUrl = `${url}/delete_expense?id=${id}`;
+        showLoading('Deleting...');
         betterFetch(fullUrl)
             .then(response => response.json())
             .then(() => {
                 clearCachePrefix(`${url}?month=`);
-                updateDebtsAndExpensesAll();
+                return updateDebtsAndExpensesAll();
             })
-            .catch(e => handleError(e));
+            .then(() => {
+                hideLoading();
+            })
+            .catch(e => {
+                hideLoading();
+                handleError(e);
+            });
     }
 
     static editExpense(id, date) {
         const fullUrl = `${url}/edit_expense?id=${id}&date=${date}`;
+        showLoading('Saving changes...');
         betterFetch(fullUrl)
             .then(response => response.json())
             .then(() => {
                 clearCachePrefix(`${url}?month=`);
-                updateDebtsAndExpensesAll();
+                return updateDebtsAndExpensesAll();
             })
-            .catch(e => handleError(e));
+            .then(() => {
+                hideLoading();
+            })
+            .catch(e => {
+                hideLoading();
+                handleError(e);
+            });
     }
+
 
 }
 
