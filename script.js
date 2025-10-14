@@ -70,6 +70,7 @@ function setCache(url, value) {
         localStorage.setItem(cacheKey(url), JSON.stringify(obj));
     } catch (e) {
         // localStorage quota might fail; ignore cache if that happens
+        alert('Warning: Unable to set cache, probably localStorage quota exceeded. Consider clearing browser cache or increasing storage quota.');
         console.warn('setCache failed', e);
     }
 }
@@ -266,12 +267,13 @@ const computeMoneyPig = (monthlySaved) => {
 
     const moneyPigAllTime = monthlySaved.reduce((sum, month) => sum + month.actual_only_pig, 0)
 
-    console.log("moneyPigAllTime", moneyPigAllTime)
     return [moneyPigAllTime, undefined]
 }
 
 // ---------- Render data (shared) ----------
 function renderData(data) {
+
+
     // Keep this identical to the processing code you had inside updateDebtsAndExpensesAll
     const fabian = data.fabian;
     const elisa = data.elisa;
@@ -317,14 +319,13 @@ function renderData(data) {
     if (monthlySaved.length === 0) {
         alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
     }
-
     updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
         monthlySaved[monthlySaved.length - 1].target_only_pig,
         monthlySaved[monthlySaved.length - 1].target_only_investments);
-
     updateAmsterdamStatistics(data.amsterdam_grouped_expenses);
     updateBar(groupedExenses, expenses);
     updateBarExpensesLastNDays(data.expenses_last_n_days);
+
     new LineGraphs().display(monthlySaved, monthlyEarned, getMonthFromUrlParam()); // displays monthly saved and monthly earned graphs
 
     ALL_EXPENSES = expenses;
@@ -353,11 +354,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
     return betterFetch(fullUrl)
         .then(resp => resp.json())
         .then(fresh => {
-            try {
-                // update cache with fresh result
-                setCache(fullUrl, fresh);
-            } catch (e) { /* ignore cache set errors */
-            }
+            setCache(fullUrl, fresh);
 
             // update UI if fresh differs from what is currently shown (or always update)
             const cachedJson = cached && cached.v ? JSON.stringify(cached.v) : null;
@@ -365,7 +362,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             const shouldUpdateUI = (cachedJson !== freshJson);
 
             if (shouldUpdateUI) {
-                renderData(fresh);
+                renderData(fresh); // this results in a crash
             }
             setCacheBadge('Live', 'live');
             // dispatch same event as before
@@ -398,6 +395,8 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
 
 
 class LineGraphs {
+    static instanceDict = {};
+
     _formatNumber(num) { // eg 2.0k -> 2k, but 2.5k -> 2.5k
         const numm = num.toFixed(1);
         return numm % 1 === 0 ? num.toFixed(0) : numm;
@@ -468,6 +467,10 @@ class LineGraphs {
 
         // Get the canvas context
         const ctx = document.getElementById(chartId).getContext('2d');
+        if (LineGraphs.instanceDict[chartId]) {
+            LineGraphs.instanceDict[chartId].destroy(); // Destroy previous instance if it exists
+        }
+
         ctx.canvas.height = height; // Set the desired height
 
         // Create the chart
@@ -475,7 +478,7 @@ class LineGraphs {
             (Math.max(...dataArgs.flatMap(dataObj => dataObj.data)) * 1.1) / 100
         ) * 100;
 
-        new Chart(ctx, {
+        LineGraphs.instanceDict[chartId] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -675,6 +678,7 @@ const filterZip = (arr1, arr2, predicate) => {
     return [result1, result2];
 }
 
+let barChartInstance = null;
 const updateBar = (groupedExenses, indivualExpenses) => {
     // ***
     // bar chart with categories on y-axis and prices on x-axis
@@ -683,6 +687,9 @@ const updateBar = (groupedExenses, indivualExpenses) => {
     // groupedExenses:
     // eg [{category: "Groceries", price_fabian: 10, price_elisa: 20}, ... ]
     const ctx = document.getElementById('barChart');
+    if (barChartInstance) {
+        barChartInstance.destroy(); // Destroy the previous chart instance
+    }
 
     const keys = groupedExenses.map(expense => expense.category);
 
@@ -764,9 +771,10 @@ const updateBar = (groupedExenses, indivualExpenses) => {
         },
     };
 
-    new Chart(ctx, config);
-}
+    barChartInstance = new Chart(ctx, config);
 
+}
+let expensesLastNDaysChartInstance = null;
 const updateBarExpensesLastNDays = (expenses) => {
     // e.g. expenses[i] = {
     //     "id": 1930,
@@ -780,6 +788,9 @@ const updateBarExpensesLastNDays = (expenses) => {
     // }
 
     const ctx = document.getElementById('expenses_last_n_days_chart').getContext('2d');
+    if (expensesLastNDaysChartInstance) {
+        expensesLastNDaysChartInstance.destroy(); // Destroy the previous chart instance
+    }
     ctx.canvas.height = 200; // Set the desired height
 
     // Group expenses by date and category
@@ -834,7 +845,7 @@ const updateBarExpensesLastNDays = (expenses) => {
 
 
     // Create the chart
-    new Chart(ctx, {
+    expensesLastNDaysChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels.map(date => new Date(date).toLocaleDateString('en-US', {weekday: 'short'})),
@@ -1104,14 +1115,17 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
             }
         ]
     };
-
     plotDonut(statistics);
 }
 
+let donutChartInstance = null;
 const plotDonut = (statistics) => {
     // ctx.canvas.height = 200; // Set the desired height
 
     const ctx = document.getElementById('donutChart');
+    if (donutChartInstance) {
+        donutChartInstance.destroy();
+    }
 
     // Center text plugin now reads from the inner donut (dataset index 1)
     const plugin = {
@@ -1194,7 +1208,8 @@ const plotDonut = (statistics) => {
         plugins: [plugin]
     };
 
-    new Chart(ctx, config);
+    donutChartInstance = new Chart(ctx, config);
+
 }
 
 
