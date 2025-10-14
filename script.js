@@ -142,6 +142,41 @@ async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate =
     }
 }
 
+// ---------- Cache status badge helpers ----------
+function createCacheBadgeIfNeeded() {
+    if (document.getElementById('cache-badge')) return;
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #cache-badge{position:fixed;right:12px;bottom:12px;z-index:12000;padding:6px 10px;border-radius:999px;font-family:Roboto,Arial,sans-serif;font-size:0.85rem;box-shadow:0 2px 6px rgba(0,0,0,0.12);color:#fff;display:flex;align-items:center;gap:8px}
+        #cache-badge .dot{width:10px;height:10px;border-radius:50%;}
+        #cache-badge.live{background:#2ecc71}
+        #cache-badge.stale{background:#f39c12}
+        #cache-badge.loading{background:#3498db}
+        #cache-badge.offline{background:#95a5a6}
+    `;
+    document.head.appendChild(style);
+
+    const badge = document.createElement('div');
+    badge.id = 'cache-badge';
+    badge.className = 'loading';
+    badge.innerHTML = `<span class="dot"></span><span id="cache-badge-text">Loading…</span>`;
+    document.body.appendChild(badge);
+}
+
+function setCacheBadge(text, variant = 'loading') {
+    createCacheBadgeIfNeeded();
+    const badge = document.getElementById('cache-badge');
+    badge.className = ''; // reset classes
+    badge.classList.add(variant);
+    const dot = badge.querySelector('.dot');
+    if (variant === 'live') dot.style.background = '#067a19';
+    else if (variant === 'stale') dot.style.background = '#ffb347';
+    else if (variant === 'loading') dot.style.background = '#2f80ed';
+    else dot.style.background = '#7f8c8d';
+    document.getElementById('cache-badge-text').textContent = text;
+}
+
+
 //// end caching
 
 /// loading overlay
@@ -234,73 +269,119 @@ const computeMoneyPig = (monthlySaved) => {
     console.log("moneyPigAllTime", moneyPigAllTime)
     return [moneyPigAllTime, undefined]
 }
+
+// ---------- Render data (shared) ----------
+function renderData(data) {
+    // Keep this identical to the processing code you had inside updateDebtsAndExpensesAll
+    const fabian = data.fabian;
+    const elisa = data.elisa;
+
+    const expenses = data.expenses;
+    const monthlyExpenses = data.monthly_expenses;
+
+    const monthlySaved = getName() === FABIAN ? data.savings_of_lifetime_fabian : data.savings_of_lifetime_elisa;
+    const monthlyEarned = getName() === FABIAN ? data.earnings_of_lifetime_fabian : data.earnings_of_lifetime_elisa;
+
+    // append monthlyExpenses to expenses
+    monthlyExpenses.forEach(expense => {
+        expenses.push(expense);
+        expense.id = -1; // mark as monthly expense
+    });
+
+    // merge grouped expenses (existing code)
+    const groupedExenses = data.grouped_expenses;
+    const groupedMonthlyExenses = data.monthly_grouped_expenses;
+
+    groupedExenses.forEach(expense => {
+        const category = expense.category;
+        const monthlyExpense = groupedMonthlyExenses.find(e => e.category === category);
+        if (monthlyExpense) {
+            expense.price_fabian += monthlyExpense.price_fabian;
+            expense.price_elisa += monthlyExpense.price_elisa;
+        }
+    });
+    groupedMonthlyExenses.forEach(expense => {
+        const category = expense.category;
+        const monthlyExpense = groupedExenses.find(e => e.category === category);
+        if (!monthlyExpense) {
+            groupedExenses.push(expense);
+        }
+    });
+
+    const historicDescriptions = data.historic_descriptions;
+    fillDescriptions(historicDescriptions);
+
+    updateDebts(fabian, elisa);
+    updateExpensesAll(expenses);
+
+    if (monthlySaved.length === 0) {
+        alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
+    }
+
+    updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
+        monthlySaved[monthlySaved.length - 1].target_only_pig,
+        monthlySaved[monthlySaved.length - 1].target_only_investments);
+
+    updateAmsterdamStatistics(data.amsterdam_grouped_expenses);
+    updateBar(groupedExenses, expenses);
+    updateBarExpensesLastNDays(data.expenses_last_n_days);
+    new LineGraphs().display(monthlySaved, monthlyEarned, getMonthFromUrlParam()); // displays monthly saved and monthly earned graphs
+
+    ALL_EXPENSES = expenses;
+}
+
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
     const nbMonthsAgo = getMonthFromUrlParam();
-    const cacheTTL = 1000 * 60 * 10; // 10 minutes - adjust if you want longer
+    const cacheTTL = 1000 * 60 * 10; // not used to block rendering; only for badge decision if you want
     const fullUrl = `${url}?month=${nbMonthsAgo}`;
 
-    return cachedGetJson(fullUrl, {ttl: cacheTTL, staleWhileRevalidate: true})
-        .then(data => {
-            console.log("(from cache/network)", data);
-            // --- your existing processing code (copy/paste) ---
-            const fabian = data.fabian;
-            const elisa = data.elisa;
+    // 1) show cached immediately if available
+    const cached = getCache(fullUrl);
+    if (cached && cached.v) {
+        // render cached version straight away
+        renderData(cached.v);
+        // show cached badge with age
+        const ageMs = Date.now() - cached.t;
+        const ageMin = Math.round(ageMs / 60000);
+        setCacheBadge(`Cached • ${ageMin}m old`, 'stale');
+    } else {
+        // no cache: indicate we're loading
+        setCacheBadge('Loading…', 'loading');
+    }
 
-            const expenses = data.expenses;
-            const monthlyExpenses = data.monthly_expenses;
-
-            const monthlySaved = getName() === FABIAN ? data.savings_of_lifetime_fabian : data.savings_of_lifetime_elisa;
-            const monthlyEarned = getName() === FABIAN ? data.earnings_of_lifetime_fabian : data.earnings_of_lifetime_elisa;
-
-            monthlyExpenses.forEach(expense => {
-                expenses.push(expense);
-                expense.id = -1;
-            });
-
-            const groupedExenses = data.grouped_expenses;
-            const groupedMonthlyExenses = data.monthly_grouped_expenses;
-
-            groupedExenses.forEach(expense => {
-                const category = expense.category;
-                const monthlyExpense = groupedMonthlyExenses.find(e => e.category === category);
-                if (monthlyExpense) {
-                    expense.price_fabian += monthlyExpense.price_fabian;
-                    expense.price_elisa += monthlyExpense.price_elisa;
-                }
-            });
-            groupedMonthlyExenses.forEach(expense => {
-                const category = expense.category;
-                const monthlyExpense = groupedExenses.find(e => e.category === category);
-                if (!monthlyExpense) {
-                    groupedExenses.push(expense);
-                }
-            });
-
-            const historicDescriptions = data.historic_descriptions;
-            fillDescriptions(historicDescriptions);
-
-            updateDebts(fabian, elisa);
-            updateExpensesAll(expenses);
-
-            if (monthlySaved.length === 0) {
-                alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
+    // 2) Always attempt to fetch fresh data in background and update UI when ready
+    return betterFetch(fullUrl)
+        .then(resp => resp.json())
+        .then(fresh => {
+            try {
+                // update cache with fresh result
+                setCache(fullUrl, fresh);
+            } catch (e) { /* ignore cache set errors */
             }
 
-            updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
-                monthlySaved[monthlySaved.length - 1].target_only_pig,
-                monthlySaved[monthlySaved.length - 1].target_only_investments);
+            // update UI if fresh differs from what is currently shown (or always update)
+            const cachedJson = cached && cached.v ? JSON.stringify(cached.v) : null;
+            const freshJson = JSON.stringify(fresh);
+            const shouldUpdateUI = (cachedJson !== freshJson);
 
-            updateAmsterdamStatistics(data.amsterdam_grouped_expenses);
-            updateBar(groupedExenses, expenses);
-            updateBarExpensesLastNDays(data.expenses_last_n_days);
-            new LineGraphs().display(monthlySaved, monthlyEarned, nbMonthsAgo);
-
-            ALL_EXPENSES = expenses;
-            // dispatch event so other code can listen if needed
-            window.dispatchEvent(new CustomEvent('data:loaded', {detail: {url: fullUrl, data}}));
-            return data;
+            if (shouldUpdateUI) {
+                renderData(fresh);
+            }
+            setCacheBadge('Live', 'live');
+            // dispatch same event as before
+            window.dispatchEvent(new CustomEvent('data:loaded', {detail: {url: fullUrl, data: fresh}}));
+            return fresh;
         })
         .catch(e => {
+            // network failed; if we had cached data we already displayed it — now show offline badge
+            if (cached && cached.v) {
+                const ageMin = Math.round((Date.now() - cached.t) / 60000);
+                setCacheBadge(`Offline — showing cached ${ageMin}m`, 'offline');
+            } else {
+                setCacheBadge('Offline', 'offline');
+            }
+
+            // retry logic for 'Failed to fetch' kept as before
             if (e instanceof TypeError && e.message === 'Failed to fetch') {
                 if (maxTrials > 0) {
                     return updateDebtsAndExpensesAll(maxTrials - 1);
