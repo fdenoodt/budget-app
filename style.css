@@ -28,11 +28,13 @@ body {
     }
 
     #left-column {
-        width: 40%;
+        width: 45%;
+        margin: 0 2% 0 2%;
     }
 
     #right-column {
-        width: 60%; /* Adjust as needed */
+        width: 55%; /* Adjust as needed */
+        margin: 0 2% 0 2%;
     }
 }
 
