@@ -54,6 +54,94 @@ function betterFetch(url, options = {}) {
     return fetch(url, options)
 }
 
+//// caching
+// ---------- Caching utilities ----------
+const CACHE_PREFIX = 'cache:ofabian:'; // easy to recognise in localStorage
+const DEFAULT_TTL = 1000 * 60 * 10; // 10 minutes
+
+function cacheKey(url) {
+    // Make keys safe & shortish (encode URI)
+    return CACHE_PREFIX + encodeURIComponent(url);
+}
+
+function setCache(url, value) {
+    try {
+        const obj = {t: Date.now(), v: value};
+        localStorage.setItem(cacheKey(url), JSON.stringify(obj));
+    } catch (e) {
+        // localStorage quota might fail; ignore cache if that happens
+        console.warn('setCache failed', e);
+    }
+}
+
+function getCache(url) {
+    try {
+        const raw = localStorage.getItem(cacheKey(url));
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        return obj;
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearCacheForUrl(url) {
+    localStorage.removeItem(cacheKey(url));
+}
+
+function clearCachePrefix(prefixUrlFragment) {
+    // remove all cached keys that include prefixUrlFragment (useful after mutations)
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+        if (k.startsWith(CACHE_PREFIX) && k.includes(prefixUrlFragment)) {
+            localStorage.removeItem(k);
+        }
+    }
+}
+
+async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate = true, force = false} = {}) {
+    // Only use cache for GET (we expect caller to use this for GETs)
+    const cached = getCache(fullUrl);
+    if (!force && cached && (Date.now() - cached.t) < ttl) {
+        // fresh cache: return it and optionally revalidate in background
+        if (staleWhileRevalidate) {
+            // fire a background revalidation but don't block the UI on it
+            betterFetch(fullUrl)
+                .then(r => r.json())
+                .then(fresh => {
+                    // if fresh differs, update cache and (optionally) trigger UI refresh
+                    try {
+                        setCache(fullUrl, fresh);
+                        // Optionally dispatch an event to let caller update UI if needed:
+                        window.dispatchEvent(new CustomEvent('cache:updated', {detail: {url: fullUrl, data: fresh}}));
+                    } catch (e) { /* ignore */
+                    }
+                })
+                .catch(() => { /* keep stale if network fails */
+                });
+        }
+        return cached.v;
+    }
+
+    // if we reach here: no cache or stale or force -> fetch from network
+    try {
+        const resp = await betterFetch(fullUrl);
+        const json = await resp.json();
+        setCache(fullUrl, json);
+        return json;
+    } catch (e) {
+        // network failed — fall back to cache if available (stale ok)
+        if (cached && cached.v) {
+            console.warn('Network failed, returning stale cache for', fullUrl);
+            return cached.v;
+        }
+        // no cache, rethrow
+        throw e;
+    }
+}
+
+//// end caching
+
 const getName = () => {
     return localStorage.getItem('budget_name') || FABIAN;
 }
@@ -103,11 +191,14 @@ const computeMoneyPig = (monthlySaved) => {
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
     const nbMonthsAgo = getMonthFromUrlParam();
 
+    const cacheTTL = 1000 * 60 * 10; // 10 minutes - adjust if you want longer
     const fullUrl = `${url}?month=${nbMonthsAgo}`;
-    betterFetch(fullUrl)
-        .then(response => response.json())
+
+    // Use cachedGetJson (stale-while-revalidate)
+    cachedGetJson(fullUrl, {ttl: cacheTTL, staleWhileRevalidate: true})
         .then(data => {
-            console.log(data)
+            console.log("(from cache/network)", data);
+            // existing processing code unchanged:
             const fabian = data.fabian; // eg: +14.00
             const elisa = data.elisa; // eg: +12.00
 
@@ -124,37 +215,27 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
                 expense.id = -1; // mark as monthly expense
             });
 
+            // merge grouped expenses (existing code)
             const groupedExenses = data.grouped_expenses;
             const groupedMonthlyExenses = data.monthly_grouped_expenses;
 
-            // merge groupedExenses and groupedMonthlyExenses. If category is in both, add prices
             groupedExenses.forEach(expense => {
                 const category = expense.category;
-                const priceFabian = expense.price_fabian;
-                const priceElisa = expense.price_elisa;
-
                 const monthlyExpense = groupedMonthlyExenses.find(expense => expense.category === category);
-
                 if (monthlyExpense) {
                     expense.price_fabian += monthlyExpense.price_fabian;
                     expense.price_elisa += monthlyExpense.price_elisa;
                 }
             });
-            // add all monthly expenses that are not in groupedExenses
             groupedMonthlyExenses.forEach(expense => {
                 const category = expense.category;
-                const priceFabian = expense.price_fabian;
-                const priceElisa = expense.price_elisa;
-
                 const monthlyExpense = groupedExenses.find(expense => expense.category === category);
-
                 if (!monthlyExpense) {
                     groupedExenses.push(expense);
                 }
             });
 
             const historicDescriptions = data.historic_descriptions;
-
             fillDescriptions(historicDescriptions);
 
             updateDebts(fabian, elisa);
@@ -165,28 +246,25 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             }
 
             updateDonut(groupedExenses, moneyPigMax = computeMoneyPig(monthlySaved)[0],
-                moneyPigCurrentMonthTarget = monthlySaved[monthlySaved.length - 1].target_only_pig, // look at the last month
+                moneyPigCurrentMonthTarget = monthlySaved[monthlySaved.length - 1].target_only_pig,
                 toInvestCurrentMonh = monthlySaved[monthlySaved.length - 1].target_only_investments);
 
             updateAmsterdamStatistics(data.amsterdam_grouped_expenses)
-
-
             updateBar(groupedExenses, expenses);
-
             updateBarExpensesLastNDays(data.expenses_last_n_days);
-
             new LineGraphs().display(monthlySaved, monthlyEarned, nbMonthsAgo); // displays monthly saved and monthly earned graphs
 
             ALL_EXPENSES = expenses;
         })
         .catch(e => {
+            // if cachedGetJson failed completely, fall back to previous retry logic
             if (e instanceof TypeError && e.message === 'Failed to fetch') {
                 maxTrials > 0 ? updateDebtsAndExpensesAll(maxTrials - 1) : handleError(e);
             } else {
-                // just raise the error
                 handleError(e);
             }
-        })
+        });
+
 }
 
 class LineGraphs {
@@ -1111,6 +1189,10 @@ const submit = () => {
 
     betterFetch(fullUrl)
         .then(response => response.json())
+        .then(() => {
+            clearCachePrefix(`${url}?month=`);
+            location.reload();
+        })
         .then(data => {
             location.reload();
         })
