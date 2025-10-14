@@ -90,14 +90,16 @@ function clearCacheForUrl(url) {
 }
 
 function clearCachePrefix(prefixUrlFragment) {
-    // remove all cached keys that include prefixUrlFragment (useful after mutations)
+    // remove all cached keys that include the encoded prefixUrlFragment (useful after mutations)
+    const encodedFragment = encodeURIComponent(prefixUrlFragment);
     const keys = Object.keys(localStorage);
     for (const k of keys) {
-        if (k.startsWith(CACHE_PREFIX) && k.includes(prefixUrlFragment)) {
+        if (k.startsWith(CACHE_PREFIX) && k.includes(encodedFragment)) {
             localStorage.removeItem(k);
         }
     }
 }
+
 
 async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate = true, force = false} = {}) {
     // Only use cache for GET (we expect caller to use this for GETs)
@@ -1187,16 +1189,31 @@ const submit = () => {
         localStorage.setItem('last_country', '');
     }
 
+    // betterFetch(fullUrl)
+    //     .then(response => response.json())
+    //     .then(() => {
+    //         clearCachePrefix(`${url}?month=`);
+    //         location.reload();
+    //     })
+    //     .then(data => {
+    //         location.reload();
+    //     })
+    //     .catch(e => handleError(e))
+
     betterFetch(fullUrl)
         .then(response => response.json())
         .then(() => {
-            clearCachePrefix(`${url}?month=`);
-            location.reload();
+            // clear cached month pages so next load shows updated info
+            clearCachePrefix(`${url}?month=`); // now correctly matches encoded keys
+
+            // OPTION A (preferred): refresh data in-place (no full page reload)
+            updateDebtsAndExpensesAll();
+
+            // OPTION B (if you still want a hard reload): location.reload();
+            // location.reload();
         })
-        .then(data => {
-            location.reload();
-        })
-        .catch(e => handleError(e))
+        .catch(e => handleError(e));
+
 
 }
 
@@ -1456,7 +1473,10 @@ class ExpenseListItem {
         const fullUrl = `${url}/delete_expense?id=${id}`;
         betterFetch(fullUrl)
             .then(response => response.json())
-            .then(() => location.reload())
+            .then(() => {
+                clearCachePrefix(`${url}?month=`);
+                updateDebtsAndExpensesAll();
+            })
             .catch(e => handleError(e));
     }
 
@@ -1464,9 +1484,13 @@ class ExpenseListItem {
         const fullUrl = `${url}/edit_expense?id=${id}&date=${date}`;
         betterFetch(fullUrl)
             .then(response => response.json())
-            .then(() => location.reload())
+            .then(() => {
+                clearCachePrefix(`${url}?month=`);
+                updateDebtsAndExpensesAll();
+            })
             .catch(e => handleError(e));
     }
+
 }
 
 
