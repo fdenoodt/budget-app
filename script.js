@@ -272,9 +272,9 @@ const computeMoneyPig = (monthlySaved) => {
 
 // ---------- Render data (shared) ----------
 function renderData(data) {
+    // deep copy of data
+    data = JSON.parse(JSON.stringify(data));
 
-
-    // Keep this identical to the processing code you had inside updateDebtsAndExpensesAll
     const fabian = data.fabian;
     const elisa = data.elisa;
 
@@ -355,7 +355,6 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
         .then(resp => resp.json())
         .then(fresh => {
             setCache(fullUrl, fresh);
-
             // update UI if fresh differs from what is currently shown (or always update)
             const cachedJson = cached && cached.v ? JSON.stringify(cached.v) : null;
             const freshJson = JSON.stringify(fresh);
