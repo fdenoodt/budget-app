@@ -170,10 +170,17 @@ function setCacheBadge(text, variant = 'loading') {
     badge.className = ''; // reset classes
     badge.classList.add(variant);
     const dot = badge.querySelector('.dot');
-    if (variant === 'live') dot.style.background = '#067a19';
-    else if (variant === 'stale') dot.style.background = '#ffb347';
-    else if (variant === 'loading') dot.style.background = '#2f80ed';
-    else dot.style.background = '#7f8c8d';
+    if (variant === 'live') {
+        dot.style.background = '#00b300';
+        setTimeout(() => { // auto-hide after 3s
+            badge.style.display = 'none';
+        }, 3000);
+    } else if (variant === 'stale')
+        dot.style.background = 'rgba(255, 205, 86, 0.5)';
+    else if (variant === 'loading')
+        dot.style.background = 'rgba(0, 122, 251, 0.5)';
+    else
+        dot.style.background = 'rgba(255, 99, 132, 0.5)';
     document.getElementById('cache-badge-text').textContent = text;
 }
 
