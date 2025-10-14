@@ -695,6 +695,7 @@ const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_add
 }
 
 const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
+    return;
     // amsterdamGroupedExpenses: [
     // {category:Amsterdam - OV, price_fabian: 10, price_elisa: 20},
     // {category:Amsterdam Boodschappen, price_fabian: 10, price_elisa: 20},

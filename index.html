@@ -25,185 +25,191 @@
 
 <body>
 <!--disable horizontal scroll-->
-<div id="main" style="overflow-x: hidden;">
-    <div id="div_debts">
-        <!-- Shows debt for Fabian and Elisa  -->
-        <span id="lbl_name_has_debt">##</span> moet <span id="lbl_name_no_debt">##</span> <span
-            id="lbl_debt">##</span>
-        EUR.
-    </div>
-
-    <div id="div_price" class="margin">
-        <!-- round up to 2 decimals -->
-        <span>€</span> <input type="number" name="inp_price" id="inp_price" autofocus placeholder="0,00"
-                              class="form-control">
-    </div>
-
-    <div class="margin">
-        <div class="put_slider_and_label_side_by_side vert-margin-sm">
-            <span id="lbl_percent" style="vertical-align: top">##</span> &nbsp;
-            <input type="range" name="inp_ratio" id="inp_ratio" min="0" max="100" value="100" step="10">
+<div id="main" style="overflow-x: hidden;" class="two-column-layout">
+    <div id="left-column">
+        <div id="div_debts">
+            <!-- Shows debt for Fabian and Elisa  -->
+            <span id="lbl_name_has_debt">##</span> moet <span id="lbl_name_no_debt">##</span> <span
+                id="lbl_debt">##</span>
+            EUR.
         </div>
 
-        <div class="put_textsboxes_side_by_side vert-margin-sm">
-            <input type="number" name="inp_price_me" id="inp_price_me" min="0" placeholder="Me" class="form-control">
-            &nbsp;
-            <input type="number" name="inp_price_other" id="inp_price_other" min="0" placeholder="Other"
-                   class="form-control">
-        </div>
-    </div>
-
-
-    <!--Categories-->
-    <div id="div_categories" class="margin">
-        <div class="put_selects_side_by_side vert-margin-sm">
-            <!-- USE HTML SELECT-TAG INSTEAD (A select tag for `Basics`, `Fun` and `Infrequent`) all items automatically added to the list using javascript -->
-            <!-- Basics -->
-            <select class="form-select" id="lst_categories_basics" style="width: 33%;" onchange="chooseCategory(this)">
-                <option selected disabled>🍎 Basics</option>
-            </select>
-
-            <!-- Fun -->
-            <select class="form-select" id="lst_categories_fun" style="width: 33%" onchange="chooseCategory(this)">
-                <option selected disabled>🎉 Fun</option>
-            </select>
-
-            <!-- Infrequent -->
-            <select class="form-select" id="lst_categories_infreq" style="width: 33%" onchange="chooseCategory(this)">
-                <option selected disabled>📎 Infreq</option>
-            </select>
+        <div id="div_price" class="margin">
+            <!-- round up to 2 decimals -->
+            <span>€</span> <input type="number" name="inp_price" id="inp_price" autofocus placeholder="0,00"
+                                  class="form-control">
         </div>
 
-        <div class="vert-margin-sm">
-            <input list="descriptions" name="inp_description" id="inp_description" placeholder="Beschrijving"
-                   class="form-select">
-            <!--filled using javascript-->
-            <datalist id="descriptions"></datalist>
+        <div class="margin">
+            <div class="put_slider_and_label_side_by_side vert-margin-sm">
+                <span id="lbl_percent" style="vertical-align: top">##</span> &nbsp;
+                <input type="range" name="inp_ratio" id="inp_ratio" min="0" max="100" value="100" step="10">
+            </div>
+
+            <div class="put_textsboxes_side_by_side vert-margin-sm">
+                <input type="number" name="inp_price_me" id="inp_price_me" min="0" placeholder="Me"
+                       class="form-control">
+                &nbsp;
+                <input type="number" name="inp_price_other" id="inp_price_other" min="0" placeholder="Other"
+                       class="form-control">
+            </div>
         </div>
 
-    </div>
+
+        <!--Categories-->
+        <div id="div_categories" class="margin">
+            <div class="put_selects_side_by_side vert-margin-sm">
+                <!-- USE HTML SELECT-TAG INSTEAD (A select tag for `Basics`, `Fun` and `Infrequent`) all items automatically added to the list using javascript -->
+                <!-- Basics -->
+                <select class="form-select" id="lst_categories_basics" style="width: 33%;"
+                        onchange="chooseCategory(this)">
+                    <option selected disabled>🍎 Basics</option>
+                </select>
+
+                <!-- Fun -->
+                <select class="form-select" id="lst_categories_fun" style="width: 33%" onchange="chooseCategory(this)">
+                    <option selected disabled>🎉 Fun</option>
+                </select>
+
+                <!-- Infrequent -->
+                <select class="form-select" id="lst_categories_infreq" style="width: 33%"
+                        onchange="chooseCategory(this)">
+                    <option selected disabled>📎 Infreq</option>
+                </select>
+            </div>
+
+            <div class="vert-margin-sm">
+                <input list="descriptions" name="inp_description" id="inp_description" placeholder="Beschrijving"
+                       class="form-select">
+                <!--filled using javascript-->
+                <datalist id="descriptions"></datalist>
+            </div>
+
+        </div>
 
 
-    <div id="div_submit" class="margin">
-        <button name="btn_submit" id="btn_submit" onclick="submit()">Submit</button>
-    </div>
+        <div id="div_submit" class="margin">
+            <button name="btn_submit" id="btn_submit" onclick="submit()">Submit</button>
+        </div>
 
-    <div id="profile_name" class="margin" style="text-align: left;">
-        Betaald door <span id="lbl_name" onclick="editName()">##</span>.
-    </div>
+        <div id="profile_name" class="margin" style="text-align: left;">
+            Betaald door <span id="lbl_name" onclick="editName()">##</span>.
+        </div>
 
 
-    <div id="div_statistics" class="margin">
-        <div class="swiper-container">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide">
-                    <div style="margin-bottom: -4em; position: relative; top: -3em;">
-                        <canvas id="donutChart"></canvas>
+        <div id="div_statistics" class="margin">
+            <div class="swiper-container" style="overflow: hidden;">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div style="margin-bottom: -4em; position: relative; top: -3em;">
+                            <canvas id="donutChart"></canvas>
+                        </div>
                     </div>
-                </div>
-                <div class="swiper-slide">
-                    Totaal uitgegeven de laatste 7 dagen
-                    <div id="expenses_last_n_days">
-                        <!-- Graph-->
-                        <canvas id="expenses_last_n_days_chart"></canvas>
+                    <div class="swiper-slide">
+                        Totaal uitgegeven de laatste 7 dagen
+                        <div id="expenses_last_n_days">
+                            <!-- Graph-->
+                            <canvas id="expenses_last_n_days_chart"></canvas>
+                        </div>
                     </div>
-                </div>
-                <div class="swiper-slide">
+                    <div class="swiper-slide">
                     <span
                             data-toggle="tooltip" data-placement="top"
                             title="Effectieve waarden die naar het spaarvarkentje gingen (behalve de laatste maand, omdat deze nog niet volledig is afgerond).
                             Berekening: Spaarvarkentje = Inkomen - werkelijke uitgaven - investeringen (80% van het inkomen na geschatte kosten)">
                     Bedrag in het spaarvarkentje
                     </span>
-                    <style>
-                        .tooltip-inner {
-                            max-width: 500px; /* Adjust the width as needed */
-                            white-space: pre-wrap;
-                        }
-                    </style>
+                        <style>
+                            .tooltip-inner {
+                                max-width: 500px; /* Adjust the width as needed */
+                                white-space: pre-wrap;
+                            }
+                        </style>
 
-                    <div id="savings_per_month_in_money_pig">
-                        <!-- Graph-->
-                        <canvas id="savingsChartPig"></canvas>
+                        <div id="savings_per_month_in_money_pig">
+                            <!-- Graph-->
+                            <canvas id="savingsChartPig"></canvas>
+                        </div>
                     </div>
-                </div>
-                <div class="swiper-slide">
+                    <div class="swiper-slide">
                     <span
                             data-toggle="tooltip" data-placement="top"
                             title="Investeringen, berekent op loon (onafhankelijk van de werkelijke uitgaven).
                             Berekening: (Inkomen - huur - allowance)*80%">
                         Bedrag in investeringen
                     </span>
-                    <div id="savings_per_month_in_investments">
-                        <!-- Graph-->
-                        <canvas id="savingsChartInvestments"></canvas>
+                        <div id="savings_per_month_in_investments">
+                            <!-- Graph-->
+                            <canvas id="savingsChartInvestments"></canvas>
+                        </div>
                     </div>
-                </div>
-                <div class="swiper-slide">
-                    Totaal verdiend
-                    <div id="earnings_per_month">
-                        <!-- Graph-->
-                        <canvas id="earningsChart"></canvas>
-                    </div>
-                    <div style="font-size: 0.8em;">
-                        On average, you earned <span id="earnings_avg" style="color: #4BC0C0;">##</span> per month.
-                        Total yearly earned: <span id="earnings_total" style="color: #4BC0C0;">##k</span>.
+                    <div class="swiper-slide">
+                        Totaal verdiend
+                        <div id="earnings_per_month">
+                            <!-- Graph-->
+                            <canvas id="earningsChart"></canvas>
+                        </div>
+                        <div style="font-size: 0.8em;">
+                            On average, you earned <span id="earnings_avg" style="color: #4BC0C0;">##</span> per month.
+                            Total yearly earned: <span id="earnings_total" style="color: #4BC0C0;">##k</span>.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
+    </div>
+    <div id="right-column">
         <div id="div_budget_statistics" style="margin-bottom: 0.5em;">
         </div>
 
-        <div id="div_amsterdam_statistics" style="margin-bottom: 0.5em;">
-        </div>
+<!--        <div id="div_amsterdam_statistics" style="margin-bottom: 0.5em;">-->
+<!--        </div>-->
         <div>
             <canvas id="barChart"></canvas>
         </div>
-    </div>
 
 
-    <div class="side-by-side margin-side">
-        <div class="left-div" style="font-size: 1.1em;">
-        </div>
-        <div class="middle-div">
+        <div class="side-by-side margin-side">
+            <div class="left-div" style="font-size: 1.1em;">
+            </div>
+            <div class="middle-div">
 
-            <div style="position: relative; top: 8px;">
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination justify-content-center pagination">
+                <div style="position: relative; top: 8px;">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-center pagination">
 
-                        <li class="page-item">
-                            <a class="page-link" onclick="showOnlyPaidByMe()">
-                                <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0b0;</i>
-                            </a>
-                        </li>
+                            <li class="page-item">
+                                <a class="page-link" onclick="showOnlyPaidByMe()">
+                                    <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0b0;</i>
+                                </a>
+                            </li>
 
-                        <li class="page-item"> <!-- remove filters on expense list -->
-                            <a class="page-link" onclick="clearExpensesFilter()">
-                                <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0c9;</i>
-                            </a>
-                        </li>
-                        <li id="paginationPrev" class="page-item">
-                            <a id="paginationPrevChild" class="page-link">&laquo;</a>
-                        </li>
-                        <li id="paginationCurr" class="page-item active">
-                            <a id="paginationCurrChild" class="page-link">##</a>
-                        </li>
-                        <li id="paginationNext" class="page-item disabled"><a id="paginationNextChild"
-                                                                              class="page-link">&raquo;</a></li>
-                    </ul>
-                </nav>
+                            <li class="page-item"> <!-- remove filters on expense list -->
+                                <a class="page-link" onclick="clearExpensesFilter()">
+                                    <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf0c9;</i>
+                                </a>
+                            </li>
+                            <li id="paginationPrev" class="page-item">
+                                <a id="paginationPrevChild" class="page-link">&laquo;</a>
+                            </li>
+                            <li id="paginationCurr" class="page-item active">
+                                <a id="paginationCurrChild" class="page-link">##</a>
+                            </li>
+                            <li id="paginationNext" class="page-item disabled"><a id="paginationNextChild"
+                                                                                  class="page-link">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
+
+
+        <div id="div_expenses">
+            <ul id="ul_expenses_all" class="expenseHistory">
+            </ul>
+        </div>
+
     </div>
-
-
-    <div id="div_expenses">
-        <ul id="ul_expenses_all" class="expenseHistory">
-        </ul>
-    </div>
-
 
 </div>
 <!-- Optional JavaScript -->
