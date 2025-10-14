@@ -29,12 +29,13 @@ body {
 
     #left-column {
         width: 45%;
-        margin: 0 2% 0 2%;
+        margin: 0.5vw 0.51vw 0.5vw 1vw;
     }
 
     #right-column {
         width: 55%; /* Adjust as needed */
-        margin: 0 2% 0 2%;
+        margin: 0.5vw 1vw 0.5vw 0.5vw;
+
     }
 }
 
