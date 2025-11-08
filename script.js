@@ -953,10 +953,6 @@ const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
 const get_max_allowance = () => {
     // max allowance becomes 1000 starting from 2025-11. Before it was 800
 
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // Months are zero-based
-    const currentYear = currentDate.getFullYear();
-
     // get year and month from url param
     const urlParams = new URLSearchParams(window.location.search);
     const monthParam = urlParams.get('month'); // e.g. ..., -3, -2, -1, 0
