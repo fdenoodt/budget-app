@@ -326,6 +326,7 @@ function renderData(data) {
     if (monthlySaved.length === 0) {
         alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
     }
+
     updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
         monthlySaved[monthlySaved.length - 1].target_only_pig,
         monthlySaved[monthlySaved.length - 1].target_only_investments);
@@ -949,13 +950,40 @@ const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
 
 }
 
+const get_max_allowance = () => {
+    // max allowance becomes 1000 starting from 2025-11. Before it was 800
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // Months are zero-based
+    const currentYear = currentDate.getFullYear();
+
+    // get year and month from url param
+    const urlParams = new URLSearchParams(window.location.search);
+    const monthParam = urlParams.get('month'); // e.g. ..., -3, -2, -1, 0
+    let targetDate = new Date();
+    if (monthParam) {
+        const nbMonthsAgo = parseInt(monthParam);
+        targetDate.setMonth(targetDate.getMonth() + nbMonthsAgo);
+    }
+    const targetMonth = targetDate.getMonth() + 1; // Months are zero-based
+    const targetYear = targetDate.getFullYear();
+    let allowanceMax = 800;
+    if (targetYear > 2025 || (targetYear === 2025 && targetMonth >= 11)) {
+        allowanceMax = 1000;
+    }
+    return allowanceMax;
+}
+
 const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInvestCurrentMonth) => {
     // groupedExenses:
     // eg [{category: "Groceries", price_fabian: 10, price_elisa: 20}, ... ]
     // moneyPigTotal: total amount in money pig
 
     const rent = 455;
-    const allowanceMax = 800; // get from server
+    const allowanceMax = get_max_allowance(); // e.g. 800 or 1000 depending on date
+
+    console.log("Current allowanceMax:", allowanceMax);
+
 
     // These two values are just for display purposes
     const maxAllowancePercent = 0.5; // 70%
