@@ -978,9 +978,6 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const rent = 455;
     const allowanceMax = get_max_allowance(); // e.g. 800 or 1000 depending on date
 
-    console.log("Current allowanceMax:", allowanceMax);
-
-
     // These two values are just for display purposes
     const maxAllowancePercent = 0.5; // 70%
     const maxMoneyPigPercent = 1 - maxAllowancePercent; // 30%
@@ -1069,6 +1066,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const moneyPigUsed = moneyPigTotal - moneyPigRemaining; // e.g. 2000 - 1950 = 50
     const leftOver = allowanceRemaining + moneyPigRemaining; // e.g. 0 + 1950 = 1950
 
+    // not donut, but the yellow bar
     updateMonthlyBudgetStatistics(income, allowanceMax, rent, toInvestCurrentMonth, toPutAssideMoneyPig)
 
 
@@ -1111,9 +1109,10 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
         `🍎 €${expensesBasics.toFixed(2)}`,
         `🎉 €${expensesFun.toFixed(2)}`,
         `📎 €${expensesInfreq.toFixed(2)}`,
-        `🍞 €${Math.max(allowanceMax.toFixed(2) - allowanceRemaining.toFixed(2))} / ${allowanceMax.toFixed(0)}`,
-        `🐖 €${Math.max(moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0))} / ${moneyPigTotal.toFixed(0)}`
+        `🍞 €${(allowanceMax - allowanceRemaining).toFixed(2)} / ${allowanceMax.toFixed(0)}`,
+        `🐖 €${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
     ];
+
     const innerColors = [
         'rgba(255, 99, 132, 0.5)',
         'rgba(0, 122, 251, 0.5)',
@@ -1239,7 +1238,6 @@ const plotDonut = (statistics) => {
     };
 
     donutChartInstance = new Chart(ctx, config);
-
 }
 
 
