@@ -1436,9 +1436,9 @@ const fillCategoriesList = () => {
         lst_categories_basics.appendChild(option);
 
         // add a line break after the 3rd last option (to seperatate amsterdam costs
-        if (i === categories_basics_keys.length - 4) {
-            lst_categories_basics.appendChild(document.createElement('hr'));
-        }
+        // if (i === categories_basics_keys.length - 4) {
+        //     lst_categories_basics.appendChild(document.createElement('hr'));
+        // }
     }
 
     for (let i = 0; i < categories_fun_keys.length; i++) {
