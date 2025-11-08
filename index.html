@@ -233,17 +233,17 @@
         $(this).tooltip('hide');
     });
 
-    const categories_basics_keys = ['Boodschappen', 'Bakker', 'Gezondheid en verzorging', 'Transport', 'Auto']
-    const categories_basics_names = ['Boodschappen', 'Bakker', 'Gezondheid & verzorging', 'Openbaar vervoer', 'Auto']
+    const categories_basics_keys = ['Boodschappen', 'Bakker', 'Gezondheid en verzorging', 'Transport', 'Auto', 'TUe']
+    const categories_basics_names = ['Boodschappen', 'Bakker', 'Gezondheid & verzorging', 'Groen vervoer', 'Auto', 'TUe']
 
-    if (getName() === FABIAN) {
-        // append amsterdam keys
-        const amsKeys = ['Amsterdam Boodschappen', 'Amsterdam - OV', 'Amsterdam Housing']
-        amsKeys.forEach((item) => {
-            categories_basics_keys.push(item);
-            categories_basics_names.push(item);
-        });
-    }
+    // if (getName() === FABIAN) {
+    //     // append amsterdam keys
+    //     const amsKeys = ['Amsterdam Boodschappen', 'Amsterdam - OV', 'Amsterdam Housing']
+    //     amsKeys.forEach((item) => {
+    //         categories_basics_keys.push(item);
+    //         categories_basics_names.push(item);
+    //     });
+    // }
 
 
     const categories_fun_keys = ['Restaurant', 'Café en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
