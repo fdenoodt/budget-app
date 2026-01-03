@@ -1,6 +1,8 @@
 const url = config.url;
 
 const chartInstances = {};
+let dashboardMonthOffsets = [];
+const detailsCache = new Map();
 let currentPerson = 'fabian';
 
 function getKey() {
@@ -77,6 +79,102 @@ function buildChart(id, config) {
     chartInstances[id] = new Chart(ctx, config);
 }
 
+function createDetailsModalIfNeeded() {
+    if (document.getElementById('dashboard-details-modal')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'dashboard-details-modal';
+    overlay.className = 'dashboard-modal';
+    overlay.innerHTML = `
+        <div class="dashboard-modal-card" role="dialog" aria-modal="true" aria-labelledby="dashboard-details-title">
+            <div class="dashboard-modal-header">
+                <h3 id="dashboard-details-title">Details</h3>
+                <button type="button" class="dashboard-modal-close" aria-label="Close">x</button>
+            </div>
+            <div class="dashboard-modal-body">
+                <ul id="dashboard-details-list"></ul>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) overlay.classList.remove('is-visible');
+    });
+    overlay.querySelector('.dashboard-modal-close').addEventListener('click', () => overlay.classList.remove('is-visible'));
+}
+
+function showDetailsModal(title, items) {
+    createDetailsModalIfNeeded();
+    const overlay = document.getElementById('dashboard-details-modal');
+    overlay.querySelector('#dashboard-details-title').textContent = title;
+    const list = overlay.querySelector('#dashboard-details-list');
+    if (!items.length) {
+        list.innerHTML = '<li>No items found.</li>';
+    } else {
+        list.innerHTML = items.map(item => {
+            const date = item.date ? `${item.date} • ` : '';
+            const desc = item.description ? item.description : '(no description)';
+            const category = item.category ? ` (${item.category})` : '';
+            return `<li>${date}${desc}${category} — €${item.amount.toFixed(2)}</li>`;
+        }).join('');
+    }
+    overlay.classList.add('is-visible');
+}
+
+async function fetchDashboardDetails(params, title) {
+    const query = new URLSearchParams(params);
+    try {
+        const response = await betterFetch(`${url}/dashboard_details?${query.toString()}`);
+        const items = await response.json();
+        showDetailsModal(title, items);
+    } catch (err) {
+        handleError(err);
+    }
+}
+
+async function fetchDetailsItems(params) {
+    const key = JSON.stringify(params);
+    if (detailsCache.has(key) && detailsCache.get(key).items) {
+        return detailsCache.get(key).items;
+    }
+    const query = new URLSearchParams(params);
+    const response = await betterFetch(`${url}/dashboard_details?${query.toString()}`);
+    const items = await response.json();
+    detailsCache.set(key, {items, loading: false});
+    return items;
+}
+
+function getClickIndex(chart, event) {
+    const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+    if (!points.length) return null;
+    return points[0];
+}
+
+function ensureDetails(params, chart) {
+    const key = JSON.stringify(params);
+    const cached = detailsCache.get(key);
+    if (cached && cached.loading) return;
+    if (cached && cached.items) return;
+    detailsCache.set(key, {items: null, loading: true});
+    fetchDetailsItems(params)
+        .then(() => chart.update('none'))
+        .catch(handleError);
+}
+
+function getCachedDetails(params) {
+    const key = JSON.stringify(params);
+    const cached = detailsCache.get(key);
+    return cached ? cached.items : null;
+}
+
+function formatDetailLines(items) {
+    if (!items || !items.length) return ['No items'];
+    return items.slice(0, 5).map(item => {
+        const desc = item.description ? item.description : '(no description)';
+        return `${desc} — €${item.amount.toFixed(2)}`;
+    });
+}
+
 function updateKpis(data) {
     const expenses = data.monthly_totals.expenses;
     const income = data.monthly_totals.income;
@@ -117,6 +215,7 @@ function updateKpis(data) {
 
 function renderCharts(data) {
     const months = data.months;
+    dashboardMonthOffsets = data.month_offsets || [];
     const colors = ['#0069d9', '#f08a5d', '#6a4c93', '#43aa8b', '#f9c74f', '#577590', '#d62828'];
 
     buildChart('chartIncomeExpense', {
@@ -129,6 +228,14 @@ function renderCharts(data) {
                     data: data.monthly_totals.expenses,
                     borderColor: '#d62828',
                     backgroundColor: 'rgba(214, 40, 40, 0.18)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Rent',
+                    data: data.monthly_totals.rent,
+                    borderColor: '#f4a261',
+                    backgroundColor: 'rgba(244, 162, 97, 0.2)',
                     fill: true,
                     tension: 0.3
                 },
@@ -164,10 +271,61 @@ function renderCharts(data) {
             plugins: {
                 legend: {
                     position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => {
+                            const ctx = contexts[0];
+                            const dataset = ctx.dataset.label;
+                            const monthLabel = ctx.label;
+                            if (dataset === 'Income' || dataset === 'Expenses') {
+                                return `${dataset} in ${monthLabel}`;
+                            }
+                            return ctx.label || '';
+                        },
+                        label: (context) => {
+                            const dataset = context.dataset.label;
+                            if (dataset !== 'Income' && dataset !== 'Expenses') {
+                                return `${dataset}: ${context.formattedValue}`;
+                            }
+                            const offset = dashboardMonthOffsets[context.dataIndex];
+                            const type = dataset === 'Income' ? 'income' : 'expense';
+                            const params = {who: currentPerson, type, offset};
+                            const items = getCachedDetails(params);
+                            if (!items) {
+                                return 'Loading...';
+                            }
+                            return formatDetailLines(items);
+                        }
+                    }
                 }
+            },
+            onHover: (event, elements) => {
+                if (!elements.length) return;
+                const point = elements[0];
+                const dataset = chartInstances.chartIncomeExpense.data.datasets[point.datasetIndex];
+                const label = dataset.label;
+                if (label !== 'Income' && label !== 'Expenses') return;
+                const offset = dashboardMonthOffsets[point.index];
+                const type = label === 'Income' ? 'income' : 'expense';
+                ensureDetails({who: currentPerson, type, offset}, chartInstances.chartIncomeExpense);
             }
         }
     });
+    chartInstances.chartIncomeExpense.options.onClick = (event, elements, chart) => {
+        const point = getClickIndex(chartInstances.chartIncomeExpense, event);
+        if (!point) return;
+        const dataset = chartInstances.chartIncomeExpense.data.datasets[point.datasetIndex];
+        const label = dataset.label;
+        if (label !== 'Income' && label !== 'Expenses') return;
+        const offset = dashboardMonthOffsets[point.index];
+        const type = label === 'Income' ? 'income' : 'expense';
+        fetchDashboardDetails({
+            who: currentPerson,
+            type,
+            offset
+        }, `${label} details`);
+    };
 
     const categoryLabels = data.category_totals.map(item => item.category);
     const categoryTotals = data.category_totals.map(item => item.total);
@@ -193,10 +351,51 @@ function renderCharts(data) {
                 }
             },
             plugins: {
-                legend: {display: false}
+                legend: {display: false},
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => {
+                            const ctx = contexts[0];
+                            return `Top items: ${ctx.label}`;
+                        },
+                        label: (context) => {
+                            const category = chartInstances.chartCategoryTotals.data.labels[context.dataIndex];
+                            const params = {
+                                who: currentPerson,
+                                type: 'category_range',
+                                months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                                category
+                            };
+                            const items = getCachedDetails(params);
+                            if (!items) return 'Loading...';
+                            return formatDetailLines(items);
+                        }
+                    }
+                }
+            },
+            onHover: (event, elements) => {
+                if (!elements.length) return;
+                const category = chartInstances.chartCategoryTotals.data.labels[elements[0].index];
+                ensureDetails({
+                    who: currentPerson,
+                    type: 'category_range',
+                    months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                    category
+                }, chartInstances.chartCategoryTotals);
             }
         }
     });
+    chartInstances.chartCategoryTotals.options.onClick = (event, elements, chart) => {
+        const point = getClickIndex(chartInstances.chartCategoryTotals, event);
+        if (!point) return;
+        const category = chartInstances.chartCategoryTotals.data.labels[point.index];
+        fetchDashboardDetails({
+            who: currentPerson,
+            type: 'category_range',
+            months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+            category
+        }, `${category} (range)`);
+    };
 
     const avgLabels = data.category_avg.map(item => item.category);
     const avgValues = data.category_avg.map(item => item.avg);
@@ -222,10 +421,51 @@ function renderCharts(data) {
                 }
             },
             plugins: {
-                legend: {display: false}
+                legend: {display: false},
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => {
+                            const ctx = contexts[0];
+                            return `Top items: ${ctx.label}`;
+                        },
+                        label: (context) => {
+                            const category = chartInstances.chartCategoryAvg.data.labels[context.dataIndex];
+                            const params = {
+                                who: currentPerson,
+                                type: 'category_range',
+                                months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                                category
+                            };
+                            const items = getCachedDetails(params);
+                            if (!items) return 'Loading...';
+                            return formatDetailLines(items);
+                        }
+                    }
+                }
+            },
+            onHover: (event, elements) => {
+                if (!elements.length) return;
+                const category = chartInstances.chartCategoryAvg.data.labels[elements[0].index];
+                ensureDetails({
+                    who: currentPerson,
+                    type: 'category_range',
+                    months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                    category
+                }, chartInstances.chartCategoryAvg);
             }
         }
     });
+    chartInstances.chartCategoryAvg.options.onClick = (event, elements, chart) => {
+        const point = getClickIndex(chartInstances.chartCategoryAvg, event);
+        if (!point) return;
+        const category = chartInstances.chartCategoryAvg.data.labels[point.index];
+        fetchDashboardDetails({
+            who: currentPerson,
+            type: 'category_range',
+            months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+            category
+        }, `${category} (range)`);
+    };
 
     const categoryTrendDatasets = data.category_monthly.map((item, index) => ({
         label: item.category,
@@ -271,14 +511,57 @@ function renderCharts(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {legend: {display: false}},
+            plugins: {
+                legend: {display: false},
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => {
+                            const ctx = contexts[0];
+                            return `Travel in ${ctx.label}`;
+                        },
+                        label: (context) => {
+                            const offset = dashboardMonthOffsets[context.dataIndex];
+                            const params = {
+                                who: currentPerson,
+                                type: 'travel',
+                                offset,
+                                category: 'Reizen'
+                            };
+                            const items = getCachedDetails(params);
+                            if (!items) return 'Loading...';
+                            return formatDetailLines(items);
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     ticks: {callback: value => formatCompact(value)}
                 }
+            },
+            onHover: (event, elements) => {
+                if (!elements.length) return;
+                const offset = dashboardMonthOffsets[elements[0].index];
+                ensureDetails({
+                    who: currentPerson,
+                    type: 'travel',
+                    offset,
+                    category: 'Reizen'
+                }, chartInstances.chartTravelMonthly);
             }
         }
     });
+    chartInstances.chartTravelMonthly.options.onClick = (event, elements, chart) => {
+        const point = getClickIndex(chartInstances.chartTravelMonthly, event);
+        if (!point) return;
+        const offset = dashboardMonthOffsets[point.index];
+        fetchDashboardDetails({
+            who: currentPerson,
+            type: 'travel',
+            offset,
+            category: 'Reizen'
+        }, `Travel expenses`);
+    };
 
     const tripLabels = data.travel.trips.map(item => item.trip);
     const tripTotals = data.travel.trips.map(item => item.total);
@@ -298,9 +581,52 @@ function renderCharts(data) {
             scales: {
                 y: {ticks: {callback: value => formatCompact(value)}}
             },
-            plugins: {legend: {display: false}}
+            plugins: {
+                legend: {display: false},
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => {
+                            const ctx = contexts[0];
+                            return `Trip: ${ctx.label}`;
+                        },
+                        label: (context) => {
+                            const trip = chartInstances.chartTravelTrips.data.labels[context.dataIndex];
+                            const params = {
+                                who: currentPerson,
+                                type: 'trip_range',
+                                months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                                trip
+                            };
+                            const items = getCachedDetails(params);
+                            if (!items) return 'Loading...';
+                            return formatDetailLines(items);
+                        }
+                    }
+                }
+            },
+            onHover: (event, elements) => {
+                if (!elements.length) return;
+                const trip = chartInstances.chartTravelTrips.data.labels[elements[0].index];
+                ensureDetails({
+                    who: currentPerson,
+                    type: 'trip_range',
+                    months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+                    trip
+                }, chartInstances.chartTravelTrips);
+            }
         }
     });
+    chartInstances.chartTravelTrips.options.onClick = (event, elements, chart) => {
+        const point = getClickIndex(chartInstances.chartTravelTrips, event);
+        if (!point) return;
+        const trip = chartInstances.chartTravelTrips.data.labels[point.index];
+        fetchDashboardDetails({
+            who: currentPerson,
+            type: 'trip_range',
+            months_back: parseInt(document.getElementById('rangeSelect').value, 10),
+            trip
+        }, `Trip: ${trip}`);
+    };
 
     const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     buildChart('chartWeekday', {

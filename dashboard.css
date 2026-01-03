@@ -209,6 +209,64 @@
     color: #6b778c;
 }
 
+.dashboard-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+    padding: 20px;
+}
+
+.dashboard-modal.is-visible {
+    display: flex;
+}
+
+.dashboard-modal-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    width: min(520px, 100%);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.dashboard-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.dashboard-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.dashboard-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.dashboard-modal-body ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.dashboard-modal-body li {
+    padding: 8px 10px;
+    background: #f5f6fa;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+
 @media (max-width: 1200px) {
     .dashboard-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
