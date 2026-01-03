@@ -29,14 +29,19 @@
     <div id="left-column">
         <div id="div_debts">
             <!-- Shows debt for Fabian and Elisa  -->
-            <span>
+            <span style="flex: 1; text-align: center;">
                 <span id="lbl_name_has_debt">##</span> moet <span id="lbl_name_no_debt">##</span> <span
                     id="lbl_debt">##</span>
                 EUR.
             </span>
-            <a class="dashboard-icon" href="dashboard.html" title="Open dashboard" aria-label="Open dashboard">
-                <i class="fa fa-line-chart" aria-hidden="true"></i>
-            </a>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+                <a class="dashboard-icon" href="dashboard.html" title="Open dashboard" aria-label="Open dashboard">
+                    <i class="fa fa-line-chart" aria-hidden="true"></i>
+                </a>
+                <a class="dashboard-icon" href="monthly.html" title="Open monthly view" aria-label="Open monthly view">
+                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                </a>
+            </div>
         </div>
 
         <div id="div_price" class="margin">
