@@ -1168,7 +1168,7 @@ const plotDonut = (statistics) => {
             const text = `€${sum}`;
             
             ctxChart.save();
-            ctxChart.font = "1em Roboto";
+            ctxChart.font = "1.5em Roboto";
             const textWidth = ctxChart.measureText(text).width;
             // Center text within the actual chart drawing area (excluding legend)
             const textX = chartArea.left + (chartArea.right - chartArea.left - textWidth) / 2;
