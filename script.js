@@ -1,5 +1,5 @@
-// const url = "http://127.0.0.1:5000"
-const url = "https://ofabian.pythonanywhere.com"
+const url = "http://127.0.0.1:5000"
+// const url = "https://ofabian.pythonanywhere.com"
 const key = authenticate()
 
 const inp_price = document.getElementById('inp_price');
@@ -1326,6 +1326,23 @@ const chooseCategory = (selectTag) => {
 
 }
 
+const resetCategorySelection = () => {
+    const selectTags = [
+        document.getElementById('lst_categories_basics'),
+        document.getElementById('lst_categories_fun'),
+        document.getElementById('lst_categories_infreq')
+    ];
+
+    selectTags.forEach(tag => {
+        if (!tag) return;
+        tag.selectedIndex = 0;
+        tag.style.borderColor = '#dcdcdc';
+    });
+
+    data.category = '';
+    checkSubmit();
+}
+
 
 const submit = () => {
     // send data to server
@@ -1389,8 +1406,7 @@ const submit = () => {
             inp_price_me.value = '';
             inp_price_other.value = '';
             document.getElementById('inp_description').value = '';
-            data.category = '';
-            checkSubmit();
+            resetCategorySelection();
         })
         .catch(e => {
             hideLoading();
