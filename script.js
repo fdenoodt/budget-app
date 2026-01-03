@@ -10,6 +10,7 @@ const lbl_name = document.getElementById('lbl_name');
 const btn_submit = document.getElementById('btn_submit');
 
 let EXPENSES_ALL = null;
+let EXPENSES_BY_ID = new Map();
 let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
 let CURRENT_MONTHLY_ALLOWANCE = Infinity; // updated from server data
 
@@ -1281,6 +1282,7 @@ const updateDebts = (fabian, elisa) => {
 const updateExpensesAll = (expenses) => {
     const lst_expenses = document.getElementById('ul_expenses_all');
     lst_expenses.innerHTML = '';
+    EXPENSES_BY_ID = new Map(expenses.map(expense => [expense.id, expense]));
 
     expenses.forEach(expense => {
         // const date = expense.date; // eg: dd-mm
@@ -1577,9 +1579,203 @@ inp_price_other.addEventListener('input', () => {
     lbl_percent.innerHTML = inp_ratio.value + '%';
 });
 
+const getExpenseById = (id) => {
+    return EXPENSES_BY_ID.get(Number(id));
+}
+
+const buildCategoryOptions = () => {
+    const categories = [
+        ...categories_basics_keys,
+        ...categories_fun_keys,
+        ...categories_infreq_keys
+    ];
+    const unique = Array.from(new Set(categories));
+    return unique.map(category => `<option value="${category}">${category}</option>`).join('');
+}
+
+const createEditModalIfNeeded = () => {
+    if (document.getElementById('edit-expense-modal')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'edit-expense-modal';
+    overlay.className = 'edit-modal';
+    overlay.innerHTML = `
+        <div class="edit-modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-expense-title">
+            <div class="edit-modal-header">
+                <h3 id="edit-expense-title">Edit expense</h3>
+                <button type="button" class="edit-modal-close" aria-label="Close">x</button>
+            </div>
+            <div class="edit-modal-body">
+                <label>Date</label>
+                <input type="date" id="edit-expense-date" class="form-control">
+
+                <label>Category</label>
+                <select id="edit-expense-category" class="form-select">
+                    ${buildCategoryOptions()}
+                </select>
+
+                <label>Description</label>
+                <input type="text" id="edit-expense-description" class="form-control">
+
+                <label>Total amount</label>
+                <input type="number" id="edit-expense-total" class="form-control" step="0.01">
+
+                <div class="edit-split-row">
+                    <span>Fabian</span>
+                    <input type="range" id="edit-expense-ratio" min="0" max="100" step="5">
+                    <span>Elisa</span>
+                </div>
+                <div class="edit-split-inputs">
+                    <label>Fabian amount</label>
+                    <input type="number" id="edit-expense-fabian-input" class="form-control" step="0.01">
+                    <label>Elisa amount</label>
+                    <input type="number" id="edit-expense-elisa-input" class="form-control" step="0.01">
+                </div>
+                <div class="edit-split-values">
+                    <span id="edit-expense-fabian">Fabian: €0.00</span>
+                    <span id="edit-expense-elisa">Elisa: €0.00</span>
+                </div>
+            </div>
+            <div class="edit-modal-actions">
+                <button type="button" class="button edit-modal-cancel">Cancel</button>
+                <button type="button" class="button edit-modal-save">Save changes</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) overlay.classList.remove('is-visible');
+    });
+    overlay.querySelector('.edit-modal-close').addEventListener('click', () => overlay.classList.remove('is-visible'));
+    overlay.querySelector('.edit-modal-cancel').addEventListener('click', () => overlay.classList.remove('is-visible'));
+};
+
+const updateEditSplitPreview = () => {
+    const totalInput = document.getElementById('edit-expense-total');
+    const ratioInput = document.getElementById('edit-expense-ratio');
+    const categorySelect = document.getElementById('edit-expense-category');
+    const fabianLabel = document.getElementById('edit-expense-fabian');
+    const elisaLabel = document.getElementById('edit-expense-elisa');
+    const fabianInput = document.getElementById('edit-expense-fabian-input');
+    const elisaInput = document.getElementById('edit-expense-elisa-input');
+
+    if (!totalInput || !ratioInput || !fabianLabel || !elisaLabel || !categorySelect || !fabianInput || !elisaInput) return;
+
+    const totalVal = parseFloat(totalInput.value) || 0;
+    const ratio = parseFloat(ratioInput.value) || 50;
+    const category = categorySelect.value;
+    const signedTotal = category === 'Inkomst' ? -Math.abs(totalVal) : Math.abs(totalVal);
+    const fabian = signedTotal * (ratio / 100);
+    const elisa = signedTotal - fabian;
+
+    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
+    fabianInput.value = Math.abs(fabian).toFixed(2);
+    elisaInput.value = Math.abs(elisa).toFixed(2);
+};
+
+const updateEditSplitFromInputs = () => {
+    const totalInput = document.getElementById('edit-expense-total');
+    const ratioInput = document.getElementById('edit-expense-ratio');
+    const categorySelect = document.getElementById('edit-expense-category');
+    const fabianInput = document.getElementById('edit-expense-fabian-input');
+    const elisaInput = document.getElementById('edit-expense-elisa-input');
+    const fabianLabel = document.getElementById('edit-expense-fabian');
+    const elisaLabel = document.getElementById('edit-expense-elisa');
+
+    if (!totalInput || !ratioInput || !categorySelect || !fabianInput || !elisaInput || !fabianLabel || !elisaLabel) return;
+
+    const fabianVal = parseFloat(fabianInput.value) || 0;
+    const elisaVal = parseFloat(elisaInput.value) || 0;
+    const totalVal = fabianVal + elisaVal;
+    totalInput.value = totalVal.toFixed(2);
+
+    const ratio = totalVal === 0 ? 50 : (fabianVal / totalVal) * 100;
+    ratioInput.value = Math.round(ratio);
+
+    const signedTotal = categorySelect.value === 'Inkomst' ? -Math.abs(totalVal) : Math.abs(totalVal);
+    const fabian = signedTotal * (ratio / 100);
+    const elisa = signedTotal - fabian;
+    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
+};
+
+const openEditExpenseById = (id) => {
+    const expense = getExpenseById(id);
+    if (!expense) return;
+    if (expense.id === -1) {
+        alert('Monthly expenses cannot be edited');
+        return;
+    }
+
+    createEditModalIfNeeded();
+    const overlay = document.getElementById('edit-expense-modal');
+
+    const dateInput = document.getElementById('edit-expense-date');
+    const categorySelect = document.getElementById('edit-expense-category');
+    const descriptionInput = document.getElementById('edit-expense-description');
+    const totalInput = document.getElementById('edit-expense-total');
+    const ratioInput = document.getElementById('edit-expense-ratio');
+    const fabianInput = document.getElementById('edit-expense-fabian-input');
+    const elisaInput = document.getElementById('edit-expense-elisa-input');
+    const saveButton = overlay.querySelector('.edit-modal-save');
+
+    dateInput.value = expense.date || '';
+    if (expense.category && !Array.from(categorySelect.options).some(option => option.value === expense.category)) {
+        const option = document.createElement('option');
+        option.value = expense.category;
+        option.textContent = expense.category;
+        categorySelect.appendChild(option);
+    }
+    categorySelect.value = expense.category || '';
+    descriptionInput.value = expense.description || '';
+
+    const total = (expense.price_fabian || 0) + (expense.price_elisa || 0);
+    const totalAbs = Math.abs(total);
+    const ratio = total !== 0 ? (expense.price_fabian / total) * 100 : 50;
+
+    totalInput.value = totalAbs.toFixed(2);
+    ratioInput.value = Math.round(ratio);
+    updateEditSplitPreview();
+    fabianInput.value = Math.abs(expense.price_fabian || 0).toFixed(2);
+    elisaInput.value = Math.abs(expense.price_elisa || 0).toFixed(2);
+
+    saveButton.onclick = () => {
+        const payload = new URLSearchParams();
+        payload.set('id', expense.id);
+        if (dateInput.value) payload.set('date', dateInput.value);
+        payload.set('category', categorySelect.value);
+        payload.set('description', descriptionInput.value || '');
+
+        const totalValue = parseFloat(totalInput.value) || 0;
+        const ratioValue = parseFloat(ratioInput.value) || 50;
+        const signedTotal = categorySelect.value === 'Inkomst' ? -Math.abs(totalValue) : Math.abs(totalValue);
+        const priceFabian = signedTotal * (ratioValue / 100);
+        const priceElisa = signedTotal - priceFabian;
+        payload.set('price_fabian', priceFabian.toFixed(2));
+        payload.set('price_elisa', priceElisa.toFixed(2));
+
+        ExpenseListItem.editExpense(payload);
+        overlay.classList.remove('is-visible');
+    };
+
+    totalInput.oninput = updateEditSplitPreview;
+    ratioInput.oninput = updateEditSplitPreview;
+    categorySelect.onchange = updateEditSplitPreview;
+    fabianInput.oninput = updateEditSplitFromInputs;
+    elisaInput.oninput = updateEditSplitFromInputs;
+
+    overlay.classList.add('is-visible');
+};
+
 
 class ExpenseListItem {
     static timerId = null;
+    static suppressClick = false;
+    static touchStartX = 0;
+    static touchStartY = 0;
+    static touchMoved = false;
 
     static html(id, date, day, monthNumeric, category, description, myPrice, priceBoth) {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -1607,21 +1803,42 @@ class ExpenseListItem {
         document.querySelectorAll('.expenseItem').forEach(item => {
             item.addEventListener('touchstart', (event) => {
                 const id = item.dataset.id;
-                const date = item.dataset.date;
-                ExpenseListItem.startTimer(id, date);
+                const touch = event.touches ? event.touches[0] : null;
+                ExpenseListItem.touchMoved = false;
+                if (touch) {
+                    ExpenseListItem.touchStartX = touch.clientX;
+                    ExpenseListItem.touchStartY = touch.clientY;
+                }
+                ExpenseListItem.startTimer(item, id);
             }, { passive: true });
 
-            item.addEventListener('mousedown', (event) => {
+            item.addEventListener('touchmove', (event) => {
+                const touch = event.touches ? event.touches[0] : null;
+                if (!touch) return;
+                const dx = Math.abs(touch.clientX - ExpenseListItem.touchStartX);
+                const dy = Math.abs(touch.clientY - ExpenseListItem.touchStartY);
+                if (dx > 8 || dy > 8) {
+                    ExpenseListItem.touchMoved = true;
+                    ExpenseListItem.stopTimer(item);
+                }
+            }, { passive: true });
+
+            item.addEventListener('mousedown', () => {
                 const id = item.dataset.id;
-                const date = item.dataset.date;
-                ExpenseListItem.startTimer(id, date);
+                ExpenseListItem.startTimer(item, id);
             });
 
-            item.addEventListener('touchend', () => ExpenseListItem.stopTimer(), { passive: true });
-            item.addEventListener('mouseup', () => ExpenseListItem.stopTimer());
-            item.addEventListener('mouseleave', () => ExpenseListItem.stopTimer());
+            item.addEventListener('touchend', () => ExpenseListItem.stopTimer(item), { passive: true });
+            item.addEventListener('mouseup', () => ExpenseListItem.stopTimer(item));
+            item.addEventListener('mouseleave', () => ExpenseListItem.stopTimer(item));
+            item.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                openEditExpenseById(item.dataset.id);
+            });
+            item.addEventListener('dblclick', () => openEditExpenseById(item.dataset.id));
 
             item.addEventListener('click', () => {
+                if (ExpenseListItem.suppressClick) return;
                 const id = item.dataset.id;
                 ExpenseListItem.deleteExpensePrompt(id);
             });
@@ -1638,39 +1855,29 @@ class ExpenseListItem {
         }, 10);
     }
 
-    static editExpensePrompt(id, date) {
-        if (id == -1) {
-            alert('Monthly expenses cannot be edited');
-            return;
-        }
-
-        const newDate = prompt(`Edit expense with id ${id}?`, date);
-        if (!newDate) return;
-
-        const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
-        if (!datePattern.test(newDate)) {
-            alert('Invalid date. Please enter a date in the format "dd/mm/yyyy".');
-            return;
-        }
-
-        const newDateObj = new Date(newDate.split('/').reverse().join('-'));
-        const currentDate = new Date();
-        currentDate.setDate(currentDate.getDate() + 1);
-
-        if (newDateObj > currentDate) {
-            alert('Invalid date. The expense date cannot be in the future.');
-            return;
-        }
-
-        this.editExpense(id, newDate);
+    static editExpensePrompt(id) {
+        openEditExpenseById(id);
     }
 
-    static startTimer(itemId, date) {
-        ExpenseListItem.timerId = setTimeout(() => this.editExpensePrompt(itemId, date), 2500);
+    static startTimer(item, itemId) {
+        item.classList.add('hold-active');
+        ExpenseListItem.timerId = setTimeout(() => {
+            if (ExpenseListItem.touchMoved) {
+                item.classList.remove('hold-active');
+                return;
+            }
+            item.classList.remove('hold-active');
+            ExpenseListItem.suppressClick = true;
+            this.editExpensePrompt(itemId);
+            setTimeout(() => {
+                ExpenseListItem.suppressClick = false;
+            }, 400);
+        }, 700);
     }
 
-    static stopTimer() {
+    static stopTimer(item) {
         clearTimeout(ExpenseListItem.timerId);
+        if (item) item.classList.remove('hold-active');
     }
 
     static getPriceText(myPrice, total, color = "blue") {
@@ -1703,8 +1910,8 @@ class ExpenseListItem {
             });
     }
 
-    static editExpense(id, date) {
-        const fullUrl = `${url}/edit_expense?id=${id}&date=${date}`;
+    static editExpense(payload) {
+        const fullUrl = `${url}/edit_expense?${payload.toString()}`;
         showLoading('Saving changes...');
         betterFetch(fullUrl)
             .then(response => response.json())
@@ -1723,6 +1930,8 @@ class ExpenseListItem {
 
 
 }
+
+
 
 
 

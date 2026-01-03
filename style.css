@@ -373,3 +373,88 @@ button {
     transition: opacity 0.5s ease;
     opacity: 0;
 }
+
+.expenseItem.hold-active {
+    background-color: #f6f6f6;
+}
+
+.edit-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+    padding: 20px;
+}
+
+.edit-modal.is-visible {
+    display: flex;
+}
+
+.edit-modal-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    width: min(420px, 100%);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.edit-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.edit-modal-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.edit-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.edit-modal-body label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.edit-split-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.edit-split-row input {
+    flex: 1;
+}
+
+.edit-split-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #3e3e3e;
+    margin-top: 6px;
+}
+
+.edit-split-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.edit-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
