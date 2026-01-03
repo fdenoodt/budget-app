@@ -755,9 +755,9 @@ const updateBar = (groupedExenses, indivualExpenses) => {
                 }, tooltip: {
                     callbacks: {
                         label: function (context) {
-                            const price = context.dataset.data[context.dataIndex];
                             const category = context.label;
                             const expenses = indivualExpenses.filter(expense => stringSubstr(expense.category, maxLen) === category); // some category may be displayed as Zelfontwik...
+                            const getExpensePrice = (expense) => getName() === FABIAN ? expense.price_fabian : expense.price_elisa;
 
                             // filter div_expenses to only show expenses of this category
                             const lst_expenses = document.getElementById('ul_expenses_all');
@@ -772,13 +772,20 @@ const updateBar = (groupedExenses, indivualExpenses) => {
                                 const priceElisa = expense.price_elisa;
                                 const description = expense.description;
 
-                                const myPrice = getName() === FABIAN ? priceFabian : priceElisa;
+                                const myPrice = getExpensePrice(expense);
 
                                 lst_expenses.innerHTML += ExpenseListItem.html(id, date, day, monthNumeric, category, description, myPrice, priceFabian + priceElisa);
                             });
                             ExpenseListItem.attachEventListeners();
 
-                            return `€${price.toFixed(2)}`;
+                            const total = expenses.reduce((sum, exp) => sum + getExpensePrice(exp), 0).toFixed(2);
+                            const expenseDetails = expenses
+                                .slice()
+                                .sort((a, b) => getExpensePrice(b) - getExpensePrice(a))
+                                .slice(0, 10)
+                                .map(exp => `${exp.description || ''}: €${getExpensePrice(exp).toFixed(2)}`);
+
+                            return [`Total: €${total}`, ...expenseDetails];
                         }
                     },
                     // callback after the tooltip has been is closed
