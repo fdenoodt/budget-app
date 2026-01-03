@@ -10,7 +10,8 @@ const lbl_name = document.getElementById('lbl_name');
 const btn_submit = document.getElementById('btn_submit');
 
 let EXPENSES_ALL = null;
-let CURRENT_MONTHLY_RENT = null; // updated from server data
+let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
+let CURRENT_MONTHLY_ALLOWANCE = Infinity; // updated from server data
 
 
 const FABIAN = 'Fabian';
@@ -329,6 +330,9 @@ function renderData(data) {
 
     if (typeof data.monthly_rent === 'number') {
         CURRENT_MONTHLY_RENT = data.monthly_rent;
+    }
+    if (typeof data.monthly_allowance === 'number') {
+        CURRENT_MONTHLY_ALLOWANCE = data.monthly_allowance;
     }
 
     updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
@@ -926,15 +930,21 @@ const updateBarExpensesLastNDays = (expenses) => {
 }
 
 const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_addition) => {
+    const safeIncome = income ?? 0;
+    // inf as a fallback
+    const safeCap = cap ?? CURRENT_MONTHLY_ALLOWANCE ?? Infinity;
+    const safeRent = rent ?? CURRENT_MONTHLY_RENT ?? Infinity;
+    const safeInvest = invest ?? 0;
+    const safePig = target_pig_addition ?? 0;
     const div_budget_statistics = document.getElementById('div_budget_statistics');
     div_budget_statistics.innerHTML = `
-        💲<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${income.toFixed(0)}</span> = 
-        🍞<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${cap.toFixed(0)}</span> + 
-        🏠<span data-toggle="tooltip" data-placement="top" title="Huur appartement">${rent.toFixed(0)}</span> + 
+        💲<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${safeIncome.toFixed(0)}</span> = 
+        🍞<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${safeCap.toFixed(0)}</span> + 
+        🏠<span data-toggle="tooltip" data-placement="top" title="Huur appartement">${safeRent.toFixed(0)}</span> + 
         💸<span data-toggle="tooltip" data-placement="top" title="Bedrag te investeren. Berekent op inkomsten nadat target allowance en huur al afgetrokken zijn. 
-        Hiervan gaat ${Math.round((invest / (invest + target_pig_addition))) * 100}% naar investeren. De overige ${Math.round((1 - (invest / (invest + target_pig_addition))) * 100)}% gaat naar de het varkentje.
-        Het investment bedrag is dus berekend op het inkomen en is onafhankelijk van hoeveel allowance je uiteindelijk uitgeeft.">${invest.toFixed(0)}</span> + 
-        🐷<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies €800 aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er €5 meer/minder naar het varkentje."> ${target_pig_addition.toFixed(0)}</span>
+        Hiervan gaat ${Math.round((safeInvest / (safeInvest + safePig))) * 100}% naar investeren. De overige ${Math.round((1 - (safeInvest / (safeInvest + safePig))) * 100)}% gaat naar de het varkentje.
+        Het investment bedrag is dus berekend op het inkomen en is onafhankelijk van hoeveel allowance je uiteindelijk uitgeeft.">${safeInvest.toFixed(0)}</span> + 
+        🐷<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies €${safeCap.toFixed(0)} aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er €5 meer/minder naar het varkentje."> ${safePig.toFixed(0)}</span>
     `;
 
     $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover click touchstart' }).on('mouseleave', function () {
@@ -972,25 +982,7 @@ const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
 
 }
 
-const get_max_allowance = () => {
-    // max allowance becomes 1000 starting from 2025-11. Before it was 800
-
-    // get year and month from url param
-    const urlParams = new URLSearchParams(window.location.search);
-    const monthParam = urlParams.get('month'); // e.g. ..., -3, -2, -1, 0
-    let targetDate = new Date();
-    if (monthParam) {
-        const nbMonthsAgo = parseInt(monthParam);
-        targetDate.setMonth(targetDate.getMonth() + nbMonthsAgo);
-    }
-    const targetMonth = targetDate.getMonth() + 1; // Months are zero-based
-    const targetYear = targetDate.getFullYear();
-    let allowanceMax = 800;
-    if (targetYear > 2025 || (targetYear === 2025 && targetMonth >= 11)) {
-        allowanceMax = 950;
-    }
-    return allowanceMax;
-}
+const get_max_allowance = () => CURRENT_MONTHLY_ALLOWANCE ?? Infinity;
 
 const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInvestCurrentMonth) => {
     // groupedExenses:
@@ -1731,5 +1723,6 @@ class ExpenseListItem {
 
 
 }
+
 
 
