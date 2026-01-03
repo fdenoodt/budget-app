@@ -61,6 +61,22 @@ function formatCompact(value) {
     return compactFormatter.format(value);
 }
 
+function getBarTotalValue(context) {
+    const parsed = context.parsed || {};
+    const indexAxis = context.chart?.options?.indexAxis || context.chart?.config?.options?.indexAxis;
+    if (indexAxis === 'y' && typeof parsed.x === 'number') return parsed.x;
+    if (typeof parsed.y === 'number') return parsed.y;
+    if (typeof parsed.x === 'number') return parsed.x;
+    return typeof context.raw === 'number' ? context.raw : 0;
+}
+
+function buildBarTooltipTitle(contexts, labelPrefix) {
+    const ctx = contexts[0];
+    const total = formatCurrency(getBarTotalValue(ctx));
+    if (!labelPrefix) return `Total: ${total}`;
+    return `Total: ${total}. ${labelPrefix}${ctx.label}`;
+}
+
 function setStatus(text) {
     const status = document.getElementById('dashboardStatus');
     if (status) status.textContent = text;
@@ -347,8 +363,7 @@ function renderCharts(data) {
                 tooltip: {
                     callbacks: {
                         title: (contexts) => {
-                            const ctx = contexts[0];
-                            return `Top items: ${ctx.label}`;
+                            return buildBarTooltipTitle(contexts, 'Top items: ');
                         },
                         label: (context) => {
                             const category = chartInstances.chartCategoryTotals.data.labels[context.dataIndex];
@@ -417,8 +432,7 @@ function renderCharts(data) {
                 tooltip: {
                     callbacks: {
                         title: (contexts) => {
-                            const ctx = contexts[0];
-                            return `Top items: ${ctx.label}`;
+                            return buildBarTooltipTitle(contexts, 'Top items: ');
                         },
                         label: (context) => {
                             const category = chartInstances.chartCategoryAvg.data.labels[context.dataIndex];
@@ -508,8 +522,7 @@ function renderCharts(data) {
                 tooltip: {
                     callbacks: {
                         title: (contexts) => {
-                            const ctx = contexts[0];
-                            return `Travel in ${ctx.label}`;
+                            return buildBarTooltipTitle(contexts, 'Travel in ');
                         },
                         label: (context) => {
                             const offset = dashboardMonthOffsets[context.dataIndex];
@@ -578,8 +591,7 @@ function renderCharts(data) {
                 tooltip: {
                     callbacks: {
                         title: (contexts) => {
-                            const ctx = contexts[0];
-                            return `Trip: ${ctx.label}`;
+                            return buildBarTooltipTitle(contexts, 'Trip: ');
                         },
                         label: (context) => {
                             const trip = chartInstances.chartTravelTrips.data.labels[context.dataIndex];
@@ -634,7 +646,15 @@ function renderCharts(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {legend: {display: false}},
+            plugins: {
+                legend: {display: false},
+                tooltip: {
+                    callbacks: {
+                        title: (contexts) => buildBarTooltipTitle(contexts, ''),
+                        label: (context) => `${context.dataset.label}: ${context.formattedValue}`
+                    }
+                }
+            },
             scales: {
                 y: {ticks: {callback: value => formatCompact(value)}}
             }
