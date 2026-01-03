@@ -1,0 +1,96 @@
+.monthly-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.monthly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.monthly-header h1 {
+    margin-bottom: 4px;
+}
+
+.monthly-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.monthly-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.monthly-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85em;
+}
+
+.monthly-split {
+    grid-column: span 2;
+}
+
+.monthly-split-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    margin-top: 6px;
+}
+
+.monthly-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+
+.monthly-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.monthly-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.2fr 0.8fr 0.7fr 0.7fr 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 10px;
+    background: #f7f8fb;
+}
+
+.monthly-header-row {
+    background: transparent;
+    font-weight: 600;
+    color: #6b6f7a;
+}
+
+.monthly-row input,
+.monthly-row select {
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .monthly-form {
+        grid-template-columns: 1fr;
+    }
+
+    .monthly-split {
+        grid-column: span 1;
+    }
+
+    .monthly-row {
+        grid-template-columns: 1fr;
+    }
+}

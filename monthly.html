@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Expenses</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="icon" type="image/png" href="fav.png"/>
+    <link rel="stylesheet" href="style.css?version=58">
+    <link rel="stylesheet" href="monthly.css?version=1">
+</head>
+<body>
+<div class="monthly-shell">
+    <header class="monthly-header">
+        <div>
+            <h1>Monthly expenses</h1>
+            <p>Manage recurring expenses and split them between Fabian and Elisa.</p>
+        </div>
+        <div class="monthly-actions">
+            <a class="button" href="index.html">Back to main</a>
+        </div>
+    </header>
+
+    <section class="monthly-card">
+        <h2>Add monthly expense</h2>
+        <div class="monthly-form">
+            <div>
+                <label>Start date</label>
+                <input type="date" id="monthly-start-date" class="form-control">
+            </div>
+            <div>
+                <label>End date (optional)</label>
+                <input type="date" id="monthly-end-date" class="form-control">
+            </div>
+            <div>
+                <label>Category</label>
+                <select id="monthly-category" class="form-select"></select>
+            </div>
+            <div>
+                <label>Description</label>
+                <input type="text" id="monthly-description" class="form-control">
+            </div>
+            <div>
+                <label>Paid by</label>
+                <select id="monthly-paid-by" class="form-select">
+                    <option value="fabian">Fabian</option>
+                    <option value="elisa">Elisa</option>
+                </select>
+            </div>
+            <div>
+                <label>Total amount</label>
+                <input type="number" id="monthly-total" class="form-control" step="0.01">
+            </div>
+            <div class="monthly-split">
+                <label>Split (Fabian / Elisa)</label>
+                <input type="range" id="monthly-ratio" min="0" max="100" step="5">
+                <div class="monthly-split-values">
+                    <span id="monthly-fabian">Fabian: €0.00</span>
+                    <span id="monthly-elisa">Elisa: €0.00</span>
+                </div>
+            </div>
+            <div class="monthly-actions">
+                <button class="button" id="monthly-add">Add</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="monthly-card">
+        <h2>Existing monthly expenses</h2>
+        <div class="monthly-table">
+            <div class="monthly-row monthly-header-row">
+                <span>Dates</span>
+                <span>Category</span>
+                <span>Description</span>
+                <span>Paid by</span>
+                <span>Fabian</span>
+                <span>Elisa</span>
+                <span>Actions</span>
+            </div>
+            <div id="monthly-rows"></div>
+        </div>
+    </section>
+</div>
+
+<script src="config.js"></script>
+<script src="monthly.js?version=1"></script>
+</body>
+</html>
