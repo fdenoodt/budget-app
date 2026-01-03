@@ -8,11 +8,22 @@ body {
 
 }
 
+body:not(.dashboard-body) {
+    background: radial-gradient(circle at top left, #fff2cc 0%, #f8f9ff 45%, #ffffff 100%);
+}
+
 #main {
     text-align: center;
     /* margin-top: 5em; */
     display: flex;
     flex-direction: column;
+}
+
+body:not(.dashboard-body) #main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
 }
 
 #left-column,
@@ -50,6 +61,15 @@ body {
 #div_debts, #div_budget_statistics {
     background-color: rgba(255, 205, 86, 0.5);
     padding: 0.5em;
+}
+
+body:not(.dashboard-body) #div_debts,
+body:not(.dashboard-body) #div_budget_statistics {
+    background: linear-gradient(90deg, rgba(255, 226, 166, 0.85), rgba(255, 244, 209, 0.9));
+    border-radius: 16px;
+    border: 1px solid rgba(31, 42, 68, 0.08);
+    box-shadow: 0 10px 25px rgba(36, 50, 75, 0.08);
+    padding: 10px 14px;
 }
 #div_debts {
     display: flex;
@@ -97,6 +117,13 @@ button,
     cursor: pointer;
 }
 
+body:not(.dashboard-body) button,
+body:not(.dashboard-body) .button {
+    background-color: #1f2a44;
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(31, 42, 68, 0.18);
+}
+
 #div_submit button:hover {
     background-color: #007AFB;
     transition: 0.15s;
@@ -123,6 +150,16 @@ input[type=number] {
     width: 5em;
     text-align: center;
     color: #3e3e3e;
+}
+
+body:not(.dashboard-body) input[name="inp_description"],
+body:not(.dashboard-body) input[type=text],
+body:not(.dashboard-body) input[type=date],
+body:not(.dashboard-body) input[type=number],
+body:not(.dashboard-body) select {
+    border-radius: 10px;
+    border: 1px solid rgba(31, 42, 68, 0.18);
+    box-shadow: 0 6px 16px rgba(36, 50, 75, 0.06);
 }
 
 input[name="inp_description"],
@@ -169,6 +206,20 @@ input[type=date]:hover {
 
 #div_categories {
     text-align: center;
+}
+
+body:not(.dashboard-body) #div_price,
+body:not(.dashboard-body) #div_categories,
+body:not(.dashboard-body) #div_submit,
+body:not(.dashboard-body) #profile_name,
+body:not(.dashboard-body) #div_statistics,
+body:not(.dashboard-body) #div_expenses,
+body:not(.dashboard-body) #div_budget_statistics {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 18px;
+    border: 1px solid rgba(31, 42, 68, 0.08);
+    box-shadow: 0 12px 30px rgba(31, 42, 68, 0.08);
+    padding: 18px;
 }
 
 

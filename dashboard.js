@@ -196,11 +196,16 @@ function updateKpis(data) {
     const income = data.monthly_totals.income;
     const rent = data.monthly_totals.rent || [];
     const targetNet = data.monthly_totals.target_net || [];
+    const allowanceTarget = data.monthly_totals.allowance_target || [];
     const months = data.months;
 
     const totalSpent = expenses.reduce((sum, val) => sum + val, 0);
     const totalIncome = income.reduce((sum, val) => sum + val, 0);
     const totalRent = rent.reduce((sum, val) => sum + val, 0);
+    const monthsCount = expenses.length || 1;
+    const totalAllowance = allowanceTarget.reduce((sum, val) => sum + val, 0);
+    const avgAllowanceSpend = totalSpent / monthsCount;
+    const avgAllowanceTarget = totalAllowance / monthsCount;
     const avgSpent = expenses.length ? (totalSpent + totalRent) / expenses.length : 0;
     const netTotal = data.monthly_totals.net.reduce((sum, val) => sum + val, 0);
     const targetNetTotal = targetNet.reduce((sum, val) => sum + val, 0);
@@ -225,6 +230,14 @@ function updateKpis(data) {
         netTargetLabel.textContent = formatCurrency(netTotal);
         netTargetValue.textContent = `Target ${formatCurrency(targetNetTotal)}`;
         netTargetLabel.style.color = netTotal >= targetNetTotal ? '#2a9d8f' : '#d14545';
+    }
+
+    const allowanceLabel = document.getElementById('kpiAllowance');
+    const allowanceTargetLabel = document.getElementById('kpiAllowanceTarget');
+    if (allowanceLabel && allowanceTargetLabel) {
+        allowanceLabel.textContent = formatCurrency(avgAllowanceSpend);
+        allowanceTargetLabel.textContent = `Target ${formatCurrency(avgAllowanceTarget)}`;
+        allowanceLabel.style.color = avgAllowanceSpend <= avgAllowanceTarget ? '#2a9d8f' : '#d14545';
     }
 
     document.getElementById('kpiPeakMonth').textContent = peakMonth;
@@ -345,22 +358,22 @@ function renderCharts(data) {
         }, `${label} details`);
     };
 
-    buildChart('chartNetTarget', {
+    buildChart('chartAllowance', {
         type: 'line',
         data: {
             labels: months,
             datasets: [
                 {
-                    label: 'Net',
-                    data: data.monthly_totals.net,
+                    label: 'Actual spend',
+                    data: data.monthly_totals.expenses,
                     borderColor: '#1d3557',
                     backgroundColor: 'rgba(29, 53, 87, 0.12)',
                     fill: true,
                     tension: 0.3
                 },
                 {
-                    label: 'Target net',
-                    data: data.monthly_totals.target_net || [],
+                    label: 'Target allowance',
+                    data: data.monthly_totals.allowance_target || [],
                     borderColor: '#f4a261',
                     backgroundColor: 'rgba(244, 162, 97, 0.15)',
                     fill: false,

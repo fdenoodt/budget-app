@@ -738,11 +738,18 @@ const updateBar = (groupedExenses, indivualExpenses) => {
 
     ctx.height = 350;
 
+    const barPalette = [
+        'rgba(31, 42, 68, 0.45)',
+        'rgba(42, 157, 143, 0.45)',
+        'rgba(244, 162, 97, 0.45)',
+        'rgba(125, 141, 166, 0.4)'
+    ];
+    const barColors = labels.map((_, idx) => barPalette[idx % barPalette.length]);
     const statistics = {
         labels: labels, keys: keys, datasets: [{
             label: '',
             data: prices,
-            backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(0, 122, 251, 0.5)', 'rgba(255, 205, 86, 0.5)',],
+            backgroundColor: barColors,
         }]
     };
 
@@ -1106,10 +1113,10 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
         `Money Pig left (€${moneyPigRemaining.toFixed(2)})`
     ];
     const outerColors = [
-        'rgba(204, 178, 255, 1.0)',       // used allowance
-        'rgba(204, 178, 255, 0.4)',       // remaining allowance
-        'rgba(164, 223, 223, 1.0)',       // used money pig
-        'rgba(164, 223, 223, 0.4)',      // remaining money pig
+        'rgba(31, 42, 68, 0.5)',       // used allowance
+        'rgba(31, 42, 68, 0.18)',      // remaining allowance
+        'rgba(42, 157, 143, 0.5)',     // used money pig
+        'rgba(42, 157, 143, 0.2)',     // remaining money pig
     ];
 
     const [expensesBasicsPercent, expensesFunPercent, expensesInfreqPercent, leftOverAllowancePercent, leftOverPigPercent] = rescaleInnerDonut(
@@ -1127,11 +1134,11 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     ];
 
     const innerColors = [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(0, 122, 251, 0.5)',
-        'rgba(255, 205, 86, 0.5)',
-        'rgba(240, 240, 240, 0.5)',
-        'rgba(240, 240, 240, 0.5)',
+        'rgba(244, 162, 97, 0.6)',
+        'rgba(42, 157, 143, 0.5)',
+        'rgba(125, 141, 166, 0.5)',
+        'rgba(236, 238, 242, 0.8)',
+        'rgba(236, 238, 242, 0.8)',
     ];
 
     // -----------------------------

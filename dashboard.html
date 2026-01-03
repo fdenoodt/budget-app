@@ -59,6 +59,11 @@
                 <div class="kpi-sub" id="kpiNetTargetValue">--</div>
             </div>
             <div class="kpi-card">
+                <div class="kpi-label">Allowance vs target</div>
+                <div class="kpi-value" id="kpiAllowance">--</div>
+                <div class="kpi-sub" id="kpiAllowanceTarget">--</div>
+            </div>
+            <div class="kpi-card">
                 <div class="kpi-label">Peak month</div>
                 <div class="kpi-value" id="kpiPeakMonth">--</div>
                 <div class="kpi-sub" id="kpiPeakValue">--</div>
@@ -84,11 +89,11 @@
 
         <div class="card card-wide">
             <div class="card-header">
-                <h3>Net vs target</h3>
-                <span>Monthly net and target net</span>
+                <h3>Allowance vs target</h3>
+                <span>Monthly spend vs allowance cap</span>
             </div>
             <div class="chart-box chart-tall">
-                <canvas id="chartNetTarget"></canvas>
+                <canvas id="chartAllowance"></canvas>
             </div>
         </div>
 
