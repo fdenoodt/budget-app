@@ -709,12 +709,23 @@ const updateBar = (groupedExenses, indivualExpenses) => {
 
     // make label "Inkomst" last
     const incomeIndex = labels.indexOf("Inkomst");
+    let incomePrice = null;
     if (incomeIndex != -1) {
-        labels.push(labels.splice(incomeIndex, 1)[0]);
-        prices.push(prices.splice(incomeIndex, 1)[0]);
+        incomePrice = Math.abs(prices[incomeIndex]) / 100;
+        labels.splice(incomeIndex, 1);
+        prices.splice(incomeIndex, 1);
+    }
 
-        // make its value positive divide by 100
-        prices[prices.length - 1] = Math.abs(prices[prices.length - 1]) / 100;
+    // Sort by price descending (highest spending first)
+    const combined = labels.map((label, i) => ({ label, price: prices[i] }));
+    combined.sort((a, b) => b.price - a.price);
+    labels = combined.map(item => item.label);
+    prices = combined.map(item => item.price);
+
+    // Add income back at the end
+    if (incomePrice !== null) {
+        labels.push("Inkomst");
+        prices.push(incomePrice);
     }
 
 
