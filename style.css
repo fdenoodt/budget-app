@@ -124,6 +124,11 @@ body:not(.dashboard-body) .button {
     box-shadow: 0 8px 18px rgba(31, 42, 68, 0.18);
 }
 
+body:not(.dashboard-body) button:hover,
+body:not(.dashboard-body) .button:hover {
+    background-color: #253659;
+}
+
 #div_submit button:hover {
     background-color: #007AFB;
     transition: 0.15s;
@@ -227,7 +232,7 @@ body:not(.dashboard-body) #div_budget_statistics {
     /* underline */
     text-decoration: underline;
     cursor: pointer;
-    color: #007AFB;
+    color: #1f2a44;
 }
 
 
@@ -327,7 +332,7 @@ td button {
 }
 
 .blue {
-    color: rgb(0, 122, 251);
+    color: #1f2a44;
 }
 
 .donut-inner {
@@ -379,7 +384,17 @@ button {
 
 #lbl_month {
     font-weight: bold;
-    color: #007AFB;
+    color: #1f2a44;
+}
+
+body:not(.dashboard-body) a,
+body:not(.dashboard-body) a:visited,
+body:not(.dashboard-body) a:hover {
+    color: #1f2a44;
+}
+
+body:not(.dashboard-body) input[type="range"] {
+    accent-color: #1f2a44;
 }
 
 .green {
