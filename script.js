@@ -623,8 +623,6 @@ class LineGraphs {
 
         let labels = this._getLabels(monthlySaved, nbMonthsAgo); // e.g. ["Jan", "Feb", "Mar", ...]
 
-
-        this._monthlySavedChart(monthlySaved, labels);
         this._monthlyEarnedChart(monthlyEarned, labels);
     }
 

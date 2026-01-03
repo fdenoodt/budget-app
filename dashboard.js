@@ -195,6 +195,7 @@ function updateKpis(data) {
     const expenses = data.monthly_totals.expenses;
     const income = data.monthly_totals.income;
     const rent = data.monthly_totals.rent || [];
+    const targetNet = data.monthly_totals.target_net || [];
     const months = data.months;
 
     const totalSpent = expenses.reduce((sum, val) => sum + val, 0);
@@ -202,6 +203,7 @@ function updateKpis(data) {
     const totalRent = rent.reduce((sum, val) => sum + val, 0);
     const avgSpent = expenses.length ? (totalSpent + totalRent) / expenses.length : 0;
     const netTotal = data.monthly_totals.net.reduce((sum, val) => sum + val, 0);
+    const targetNetTotal = targetNet.reduce((sum, val) => sum + val, 0);
 
     const peakValue = Math.max(...expenses);
     const peakIndex = expenses.indexOf(peakValue);
@@ -216,6 +218,14 @@ function updateKpis(data) {
     const netLabel = document.getElementById('kpiNet');
     netLabel.textContent = `Net ${formatCurrency(netTotal)}`;
     netLabel.style.color = netTotal >= 0 ? '#2a9d8f' : '#d14545';
+
+    const netTargetLabel = document.getElementById('kpiNetTarget');
+    const netTargetValue = document.getElementById('kpiNetTargetValue');
+    if (netTargetLabel && netTargetValue) {
+        netTargetLabel.textContent = formatCurrency(netTotal);
+        netTargetValue.textContent = `Target ${formatCurrency(targetNetTotal)}`;
+        netTargetLabel.style.color = netTotal >= targetNetTotal ? '#2a9d8f' : '#d14545';
+    }
 
     document.getElementById('kpiPeakMonth').textContent = peakMonth;
     document.getElementById('kpiPeakValue').textContent = formatCurrency(peakValue);
