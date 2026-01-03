@@ -51,10 +51,30 @@ body {
     background-color: rgba(255, 205, 86, 0.5);
     padding: 0.5em;
 }
+#div_debts {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
 
-.dashboard-link {
-    text-align: right;
-    margin-top: 8px;
+.dashboard-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(62, 62, 62, 0.12);
+    color: #3e3e3e;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.dashboard-icon:hover {
+    background: rgba(62, 62, 62, 0.2);
+    color: #1f2a44;
+    transform: translateY(-1px);
 }
 
 #div_amsterdam_statistics {
