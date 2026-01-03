@@ -10,6 +10,7 @@ const lbl_name = document.getElementById('lbl_name');
 const btn_submit = document.getElementById('btn_submit');
 
 let EXPENSES_ALL = null;
+let CURRENT_MONTHLY_RENT = null; // updated from server data
 
 
 const FABIAN = 'Fabian';
@@ -49,7 +50,7 @@ function handleError(err) {
 }
 
 function betterFetch(url, options = {}) {
-    options.headers = {'Authorization': 'Basic ' + btoa(getKey())}
+    options.headers = { 'Authorization': 'Basic ' + btoa(getKey()) }
     return fetch(url, options)
 }
 
@@ -65,7 +66,7 @@ function cacheKey(url) {
 
 function setCache(url, value) {
     try {
-        const obj = {t: Date.now(), v: value};
+        const obj = { t: Date.now(), v: value };
         localStorage.setItem(cacheKey(url), JSON.stringify(obj));
     } catch (e) {
         // localStorage quota might fail; ignore cache if that happens
@@ -101,7 +102,7 @@ function clearCachePrefix(prefixUrlFragment) {
 }
 
 
-async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate = true, force = false} = {}) {
+async function cachedGetJson(fullUrl, { ttl = DEFAULT_TTL, staleWhileRevalidate = true, force = false } = {}) {
     // Only use cache for GET (we expect caller to use this for GETs)
     const cached = getCache(fullUrl);
     if (!force && cached && (Date.now() - cached.t) < ttl) {
@@ -115,7 +116,7 @@ async function cachedGetJson(fullUrl, {ttl = DEFAULT_TTL, staleWhileRevalidate =
                     try {
                         setCache(fullUrl, fresh);
                         // Optionally dispatch an event to let caller update UI if needed:
-                        window.dispatchEvent(new CustomEvent('cache:updated', {detail: {url: fullUrl, data: fresh}}));
+                        window.dispatchEvent(new CustomEvent('cache:updated', { detail: { url: fullUrl, data: fresh } }));
                     } catch (e) { /* ignore */
                     }
                 })
@@ -326,6 +327,10 @@ function renderData(data) {
         alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
     }
 
+    if (typeof data.monthly_rent === 'number') {
+        CURRENT_MONTHLY_RENT = data.monthly_rent;
+    }
+
     updateDonut(groupedExenses, computeMoneyPig(monthlySaved)[0],
         monthlySaved[monthlySaved.length - 1].target_only_pig,
         monthlySaved[monthlySaved.length - 1].target_only_investments);
@@ -372,7 +377,7 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             }
             setCacheBadge('Live', 'live');
             // dispatch same event as before
-            window.dispatchEvent(new CustomEvent('data:loaded', {detail: {url: fullUrl, data: fresh}}));
+            window.dispatchEvent(new CustomEvent('data:loaded', { detail: { url: fullUrl, data: fresh } }));
             return fresh;
         })
         .catch(e => {
@@ -545,7 +550,7 @@ class LineGraphs {
         //
         // drawChart('myChartId', data1, data2, labels);
 
-        this.drawChart('earningsChart', 200, {'name': 'Earnings', 'data': monthlyEarned}, labels);
+        this.drawChart('earningsChart', 200, { 'name': 'Earnings', 'data': monthlyEarned }, labels);
         this._printMonthlyEarnedValues(monthlyEarned);
     }
 
@@ -593,13 +598,13 @@ class LineGraphs {
         }
 
         this.drawChart('savingsChartPig', 200,
-            {'name': 'Actual (Pig)', 'data': actual_saved_pig, 'pointValues': pointValues},
-            {'name': 'Target (Pig)', 'data': target_saved_pig},
+            { 'name': 'Actual (Pig)', 'data': actual_saved_pig, 'pointValues': pointValues },
+            { 'name': 'Target (Pig)', 'data': target_saved_pig },
             labels); // labels e.g. ["Jan", "Feb", "Mar", ...]
 
 
         this.drawChart('savingsChartInvestments', 120,
-            {'name': 'Investments', 'data': actual_saved_investments},
+            { 'name': 'Investments', 'data': actual_saved_investments },
             labels,); // labels e.g. ["Jan", "Feb", "Mar", ...]
 
         this._printMonthlySavedValues(data_more_than_12months);
@@ -860,8 +865,8 @@ const updateBarExpensesLastNDays = (expenses) => {
         return {
             label: category,
             data: labels.map(date => groupedExpenses[date][category]?.reduce((sum, exp) =>
-                    // sum + exp.price_fabian,
-                    sum + (getName() === FABIAN ? exp.price_fabian : exp.price_elisa),
+                // sum + exp.price_fabian,
+                sum + (getName() === FABIAN ? exp.price_fabian : exp.price_elisa),
                 0) || 0),
             stack: 'stack1'
         };
@@ -872,7 +877,7 @@ const updateBarExpensesLastNDays = (expenses) => {
     expensesLastNDaysChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels.map(date => new Date(date).toLocaleDateString('en-US', {weekday: 'short'})),
+            labels: labels.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
             datasets: datasets
         },
         options: {
@@ -932,7 +937,7 @@ const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_add
         🐷<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies €800 aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er €5 meer/minder naar het varkentje."> ${target_pig_addition.toFixed(0)}</span>
     `;
 
-    $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
+    $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover click touchstart' }).on('mouseleave', function () {
         $(this).tooltip('hide');
     });
 }
@@ -992,7 +997,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     // eg [{category: "Groceries", price_fabian: 10, price_elisa: 20}, ... ]
     // moneyPigTotal: total amount in money pig
 
-    const rent = 455;
+    const rent = CURRENT_MONTHLY_RENT;
     const allowanceMax = get_max_allowance(); // e.g. 800 or 1000 depending on date
 
     // These two values are just for display purposes
@@ -1001,9 +1006,9 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
 
 
     const rescaleInnerDonut = (expensesBasics, expensesFun, expensesInfreq, leftOver, // leftOver
-                               allowanceMax, moneyPigTotal, leftOverAllowance, leftOverPig,
-                               // last two args are used (based on outer donut vals) for approx method when allowanceUsed > allowanceMax
-                               allowanceUsedDisp, moneyPigUsedDisp) => {
+        allowanceMax, moneyPigTotal, leftOverAllowance, leftOverPig,
+        // last two args are used (based on outer donut vals) for approx method when allowanceUsed > allowanceMax
+        allowanceUsedDisp, moneyPigUsedDisp) => {
 
         const total = expensesBasics + expensesFun + expensesInfreq;
         const ratioAllowance = total / allowanceMax; // e.g. 850 / 800 = 1.0625 or 750 / 800 = 0.9375
@@ -1045,7 +1050,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     }
 
     const rescaleOuterDonut = (allowanceUsed, allowanceRemaining, moneyPigUsed, moneyPigRemaining,
-                               allowanceMax, moneyPigTotal) => {
+        allowanceMax, moneyPigTotal) => {
         // for outer donut
 
         // only rescale if allowanceRemaining < 0
@@ -1095,9 +1100,9 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
 
     const [allowanceUsedDisp, allowanceRemainingDisp, moneyPigUsedDisp, moneyPigRemainingDisp]
         = rescaleOuterDonut(
-        allowanceUsed, allowanceRemaining, moneyPigUsed, moneyPigRemaining,
-        allowanceMax, moneyPigTotal
-    );
+            allowanceUsed, allowanceRemaining, moneyPigUsed, moneyPigRemaining,
+            allowanceMax, moneyPigTotal
+        );
 
 
     const outerData = [allowanceUsedDisp, allowanceRemainingDisp, moneyPigUsedDisp, moneyPigRemainingDisp];
@@ -1183,14 +1188,14 @@ const plotDonut = (statistics) => {
             const ctxChart = chart.ctx;
             const chartArea = chart.chartArea;
             const text = `€${sum}`;
-            
+
             ctxChart.save();
             ctxChart.font = "1.5em Roboto";
             const textWidth = ctxChart.measureText(text).width;
             // Center text within the actual chart drawing area (excluding legend)
             const textX = chartArea.left + (chartArea.right - chartArea.left - textWidth) / 2;
             const textY = chartArea.top + (chartArea.bottom - chartArea.top) / 2;
-            
+
             ctxChart.textBaseline = "middle";
             ctxChart.fillStyle = '#3e3e3e';
             ctxChart.fillText(text, textX, textY);
@@ -1612,7 +1617,7 @@ class ExpenseListItem {
                 const id = item.dataset.id;
                 const date = item.dataset.date;
                 ExpenseListItem.startTimer(id, date);
-            }, {passive: true});
+            }, { passive: true });
 
             item.addEventListener('mousedown', (event) => {
                 const id = item.dataset.id;
@@ -1620,7 +1625,7 @@ class ExpenseListItem {
                 ExpenseListItem.startTimer(id, date);
             });
 
-            item.addEventListener('touchend', () => ExpenseListItem.stopTimer(), {passive: true});
+            item.addEventListener('touchend', () => ExpenseListItem.stopTimer(), { passive: true });
             item.addEventListener('mouseup', () => ExpenseListItem.stopTimer());
             item.addEventListener('mouseleave', () => ExpenseListItem.stopTimer());
 
