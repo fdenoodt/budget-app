@@ -345,6 +345,51 @@ function renderCharts(data) {
         }, `${label} details`);
     };
 
+    buildChart('chartNetTarget', {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Net',
+                    data: data.monthly_totals.net,
+                    borderColor: '#1d3557',
+                    backgroundColor: 'rgba(29, 53, 87, 0.12)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Target net',
+                    data: data.monthly_totals.target_net || [],
+                    borderColor: '#f4a261',
+                    backgroundColor: 'rgba(244, 162, 97, 0.15)',
+                    fill: false,
+                    borderDash: [6, 4],
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        callback: value => formatCompact(value)
+                    }
+                }
+            },
+            plugins: {
+                legend: {position: 'bottom'},
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${context.formattedValue}`
+                    }
+                }
+            }
+        }
+    });
+
     const categoryLabels = data.category_totals.map(item => item.category);
     const categoryTotals = data.category_totals.map(item => item.total);
     buildChart('chartCategoryTotals', {
