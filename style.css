@@ -233,8 +233,7 @@ body:not(.dashboard-body) #div_budget_statistics {
     body:not(.dashboard-body) #div_submit,
     body:not(.dashboard-body) #profile_name,
     body:not(.dashboard-body) #div_statistics,
-    body:not(.dashboard-body) #div_expenses,
-    body:not(.dashboard-body) #div_budget_statistics {
+    body:not(.dashboard-body) #div_expenses {
         background: transparent;
         border: none;
         box-shadow: none;
@@ -243,11 +242,27 @@ body:not(.dashboard-body) #div_budget_statistics {
 
     body:not(.dashboard-body) #div_debts,
     body:not(.dashboard-body) #div_budget_statistics {
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        padding: 0;
+        margin-left: 20px;
+        margin-right: 20px;
     }
+}
+
+body:not(.dashboard-body) .pagination .page-link {
+    color: #3e3e3e;
+    background-color: #f2f4f8;
+    border-color: rgba(31, 42, 68, 0.18);
+    box-shadow: none;
+}
+
+body:not(.dashboard-body) .pagination .page-item.active .page-link {
+    color: #1f2a44;
+    background-color: #d7dde8;
+    border-color: #c3cad7;
+}
+
+body:not(.dashboard-body) .pagination .page-link:hover {
+    color: #1f2a44;
+    background-color: #e7ebf2;
 }
 
 

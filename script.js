@@ -544,20 +544,6 @@ class LineGraphs {
         });
     }
 
-    _monthlyEarnedChart(monthlyEarned, labels) {
-        // monthlyEarned = [2800, 3000, 3200, ...]
-        // labels e.g. ["Jan", "Feb", "Mar", ...]
-        monthlyEarned = monthlyEarned.slice(Math.max(0, monthlyEarned.length - 12));
-
-        // const data1 = { name: 'Dataset 1', data: [10, 20, 30, 40] };
-        // const data2 = { name: 'Dataset 2', data: [15, 25, 35, 45] };
-        // const labels = ['January', 'February', 'March', 'April'];
-        //
-        // drawChart('myChartId', data1, data2, labels);
-
-        this.drawChart('earningsChart', 200, { 'name': 'Earnings', 'data': monthlyEarned }, labels);
-        this._printMonthlyEarnedValues(monthlyEarned);
-    }
 
     _getLabels(monthlySaved, nbMonthsAgo) {
         let labels = []; // e.g. ["Jan", "Feb", "Mar", ...]
@@ -623,7 +609,6 @@ class LineGraphs {
 
         let labels = this._getLabels(monthlySaved, nbMonthsAgo); // e.g. ["Jan", "Feb", "Mar", ...]
 
-        this._monthlyEarnedChart(monthlyEarned, labels);
     }
 
 }
@@ -1294,7 +1279,6 @@ const updateExpensesAll = (expenses) => {
         // convert to dd/mm
 
         if (!expense.date || typeof expense.date !== 'string') {
-            console.log(expense)
             expense.date = "00-00";
         } 
 
