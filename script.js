@@ -987,7 +987,7 @@ const get_max_allowance = () => {
     const targetYear = targetDate.getFullYear();
     let allowanceMax = 800;
     if (targetYear > 2025 || (targetYear === 2025 && targetMonth >= 11)) {
-        allowanceMax = 1000;
+        allowanceMax = 950;
     }
     return allowanceMax;
 }
