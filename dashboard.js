@@ -80,12 +80,14 @@ function buildChart(id, config) {
 function updateKpis(data) {
     const expenses = data.monthly_totals.expenses;
     const income = data.monthly_totals.income;
+    const rent = data.monthly_totals.rent || [];
     const months = data.months;
 
     const totalSpent = expenses.reduce((sum, val) => sum + val, 0);
     const totalIncome = income.reduce((sum, val) => sum + val, 0);
-    const avgSpent = expenses.length ? totalSpent / expenses.length : 0;
-    const netTotal = totalIncome - totalSpent;
+    const totalRent = rent.reduce((sum, val) => sum + val, 0);
+    const avgSpent = expenses.length ? (totalSpent + totalRent) / expenses.length : 0;
+    const netTotal = data.monthly_totals.net.reduce((sum, val) => sum + val, 0);
 
     const peakValue = Math.max(...expenses);
     const peakIndex = expenses.indexOf(peakValue);
@@ -93,7 +95,7 @@ function updateKpis(data) {
 
     const topCategory = data.category_totals[0];
 
-    document.getElementById('kpiTotalSpent').textContent = formatCurrency(totalSpent);
+    document.getElementById('kpiTotalSpent').textContent = formatCurrency(totalSpent + totalRent);
     document.getElementById('kpiAvgSpent').textContent = `Avg ${formatCurrency(avgSpent)} / month`;
     document.getElementById('kpiTotalIncome').textContent = formatCurrency(totalIncome);
 
@@ -127,6 +129,14 @@ function renderCharts(data) {
                     data: data.monthly_totals.expenses,
                     borderColor: '#d62828',
                     backgroundColor: 'rgba(214, 40, 40, 0.18)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Rent',
+                    data: data.monthly_totals.rent,
+                    borderColor: '#f4a261',
+                    backgroundColor: 'rgba(244, 162, 97, 0.2)',
                     fill: true,
                     tension: 0.3
                 },
