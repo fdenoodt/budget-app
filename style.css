@@ -217,9 +217,16 @@ body:not(.dashboard-body) #div_price,
 body:not(.dashboard-body) #div_categories,
 body:not(.dashboard-body) #div_submit,
 body:not(.dashboard-body) #profile_name,
-body:not(.dashboard-body) #div_statistics,
-body:not(.dashboard-body) #div_expenses,
-body:not(.dashboard-body) #div_budget_statistics {
+body:not(.dashboard-body) #div_statistics
+/* body:not(.dashboard-body) #div_budget_statistics  */
+{
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+body:not(.dashboard-body) #div_expenses {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 18px;
     border: 1px solid rgba(31, 42, 68, 0.08);
