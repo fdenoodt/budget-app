@@ -44,7 +44,7 @@
 .toggle-group {
     display: inline-flex;
     background: #ffffff;
-    border: 1px solid #d8deea;
+    border: 1px solid rgba(31, 42, 68, 0.2);
     border-radius: 999px;
     overflow: hidden;
     box-shadow: 0 6px 18px rgba(36, 50, 75, 0.08);
@@ -53,7 +53,7 @@
 .toggle-button {
     border: none;
     background: transparent;
-    padding: 8px 16px;
+    padding: 8px 18px;
     font-size: 0.85rem;
     font-weight: 600;
     color: #5d6b84;
@@ -79,9 +79,20 @@
 
 .range-select .form-select {
     border-radius: 10px;
-    border: 1px solid #d8deea;
+    border: 1px solid rgba(31, 42, 68, 0.2);
     box-shadow: none;
     padding: 8px 12px;
+}
+
+.dashboard-header .button {
+    background-color: #1f2a44;
+    border-radius: 10px;
+    padding: 8px 18px;
+    height: auto;
+}
+
+.dashboard-header .button:hover {
+    background-color: #253659;
 }
 
 .dashboard-hero {
