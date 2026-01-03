@@ -1159,23 +1159,25 @@ const plotDonut = (statistics) => {
     // Center text plugin now reads from the inner donut (dataset index 1)
     const plugin = {
         id: 'my-plugin',
-        beforeDraw: (chart, args, options) => {
+        afterDraw: (chart, args, options) => {
             // Use the inner dataset (expenses) to sum up the values (except leftover)
             const data = chart.data.datasets[1].data;
             const sum = data.slice(0, data.length - 2).reduce((a, b) => a + b, 0).toFixed(0);
-            const width = chart.width, height = chart.height, ctxChart = chart.ctx;
-            const legendWidth = chart.legend && chart.legend.width ? chart.legend.width : 0;
+            const ctxChart = chart.ctx;
+            const chartArea = chart.chartArea;
             const text = `€${sum}`;
-            const textX = Math.round((width - ctxChart.measureText(text).width) / 2) - legendWidth / 2;
-            const textY = height / 2;
-            const textLength = text.length;
-            const fontSize = 1 //textLength > 6 ? 1 : 1.5;
-            ctxChart.restore();
-            ctxChart.font = fontSize + "em Roboto";
+            
+            ctxChart.save();
+            ctxChart.font = "1em Roboto";
+            const textWidth = ctxChart.measureText(text).width;
+            // Center text within the actual chart drawing area (excluding legend)
+            const textX = chartArea.left + (chartArea.right - chartArea.left - textWidth) / 2;
+            const textY = chartArea.top + (chartArea.bottom - chartArea.top) / 2;
+            
             ctxChart.textBaseline = "middle";
             ctxChart.fillStyle = '#3e3e3e';
             ctxChart.fillText(text, textX, textY);
-            ctxChart.save();
+            ctxChart.restore();
         },
     };
 
