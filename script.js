@@ -1109,7 +1109,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
         `🍎 €${expensesBasics.toFixed(2)}`,
         `🎉 €${expensesFun.toFixed(2)}`,
         `📎 €${expensesInfreq.toFixed(2)}`,
-        `🍞 €${(allowanceMax - allowanceRemaining).toFixed(2)} / ${allowanceMax.toFixed(0)}`,
+        `🍞 €${(allowanceMax - allowanceRemaining).toFixed(0)} / ${allowanceMax.toFixed(0)}`,
         `🐖 €${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
     ];
 
@@ -1169,7 +1169,7 @@ const plotDonut = (statistics) => {
             const textX = Math.round((width - ctxChart.measureText(text).width) / 2) - legendWidth / 2;
             const textY = height / 2;
             const textLength = text.length;
-            const fontSize = textLength > 6 ? 1 : 1.5;
+            const fontSize = 1 //textLength > 6 ? 1 : 1.5;
             ctxChart.restore();
             ctxChart.font = fontSize + "em Roboto";
             ctxChart.textBaseline = "middle";
@@ -1407,6 +1407,7 @@ const submit = () => {
             inp_price_other.value = '';
             document.getElementById('inp_description').value = '';
             resetCategorySelection();
+            holidayImmediatelyFillInCategory();
         })
         .catch(e => {
             hideLoading();
