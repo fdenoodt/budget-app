@@ -218,7 +218,6 @@ body:not(.dashboard-body) #div_categories,
 body:not(.dashboard-body) #div_submit,
 body:not(.dashboard-body) #profile_name,
 body:not(.dashboard-body) #div_statistics
-/* body:not(.dashboard-body) #div_budget_statistics  */
 {
     background: transparent;
     border: none;
