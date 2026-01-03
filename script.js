@@ -1288,9 +1288,15 @@ const updateExpensesAll = (expenses) => {
         // const date = expense.date; // eg: dd-mm
         // convert to dd/mm
 
-        if (expense.date === null) expense.date = "00-00"
+        if (!expense.date || typeof expense.date !== 'string') {
+            console.log(expense)
+            expense.date = "00-00";
+        } 
 
-        const date = expense.date.split('-').reverse().join('/');
+        const dateParts = expense.date.split('-');
+        const date = (dateParts.length === 2 || dateParts.length === 3)
+            ? dateParts.reverse().join('/')
+            : '00/00';
         const priceFabian = Math.abs(expense.price_fabian);
         const priceElisa = Math.abs(expense.price_elisa);
         const category = expense.category;
@@ -1779,7 +1785,8 @@ class ExpenseListItem {
 
     static html(id, date, day, monthNumeric, category, description, myPrice, priceBoth) {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const month = monthNames[parseInt(monthNumeric, 10) - 1]; // Convert numeric month to name
+        const monthIndex = parseInt(monthNumeric, 10) - 1;
+        const month = monthNames[monthIndex] || '--'; // Convert numeric month to name with fallback
         const colour = category === "Inkomst" ? "green" : "blue";
 
         return `
