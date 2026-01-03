@@ -227,6 +227,29 @@ body:not(.dashboard-body) #div_budget_statistics {
     padding: 18px;
 }
 
+@media (max-width: 767px) {
+    body:not(.dashboard-body) #div_price,
+    body:not(.dashboard-body) #div_categories,
+    body:not(.dashboard-body) #div_submit,
+    body:not(.dashboard-body) #profile_name,
+    body:not(.dashboard-body) #div_statistics,
+    body:not(.dashboard-body) #div_expenses,
+    body:not(.dashboard-body) #div_budget_statistics {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    body:not(.dashboard-body) #div_debts,
+    body:not(.dashboard-body) #div_budget_statistics {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+    }
+}
+
 
 #lbl_name {
     /* underline */
