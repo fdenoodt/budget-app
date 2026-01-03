@@ -232,14 +232,6 @@ function renderCharts(data) {
                     tension: 0.3
                 },
                 {
-                    label: 'Rent',
-                    data: data.monthly_totals.rent,
-                    borderColor: '#f4a261',
-                    backgroundColor: 'rgba(244, 162, 97, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                },
-                {
                     label: 'Income',
                     data: data.monthly_totals.income,
                     borderColor: '#2a9d8f',
