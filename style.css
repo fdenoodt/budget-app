@@ -330,7 +330,7 @@ body:not(.dashboard-body) .pagination .page-link:hover {
     gap: 8px;
 }
 
-.calc-key {
+body:not(.dashboard-body) .calc-keypad .calc-key {
     border: 1px solid rgba(31, 42, 68, 0.12);
     background: #f8f9ff;
     color: #1f2a44;
@@ -338,19 +338,20 @@ body:not(.dashboard-body) .pagination .page-link:hover {
     font-size: 1rem;
     padding: 10px 0;
     cursor: pointer;
+    box-shadow: none;
 }
 
-.calc-key:active {
+body:not(.dashboard-body) .calc-keypad .calc-key:active {
     background: #e7ebf2;
 }
 
-.calc-key.calc-action {
+body:not(.dashboard-body) .calc-keypad .calc-key.calc-action {
     background: #1f2a44;
     color: #ffffff;
     border-color: #1f2a44;
 }
 
-.calc-key.calc-key-wide {
+body:not(.dashboard-body) .calc-keypad .calc-key.calc-key-wide {
     grid-column: span 2;
 }
 
