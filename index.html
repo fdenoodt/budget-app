@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=64">
+    <link rel="stylesheet" href="style.css?version=65">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -46,7 +46,7 @@
 
         <div id="div_price" class="margin">
             <!-- round up to 2 decimals -->
-            <span>€</span> <input type="number" name="inp_price" id="inp_price" autofocus placeholder="0,00"
+            <span>€</span> <input type="number" name="inp_price" id="inp_price" autofocus placeholder="0,00" inputmode="none"
                                   class="form-control">
         </div>
 
@@ -57,10 +57,10 @@
             </div>
 
             <div class="put_textsboxes_side_by_side vert-margin-sm">
-                <input type="number" name="inp_price_me" id="inp_price_me" min="0" placeholder="Me"
+                <input type="number" name="inp_price_me" id="inp_price_me" min="0" placeholder="Me" inputmode="none"
                        class="form-control">
                 &nbsp;
-                <input type="number" name="inp_price_other" id="inp_price_other" min="0" placeholder="Other"
+                <input type="number" name="inp_price_other" id="inp_price_other" min="0" placeholder="Other" inputmode="none"
                        class="form-control">
             </div>
         </div>
@@ -197,20 +197,20 @@
     <div class="calc-keypad-card" role="dialog" aria-label="Calculator keypad">
         <div class="calc-display" id="calc_display">0</div>
         <div class="calc-grid">
-            <button type="button" class="calc-key calc-action" data-action="clear">C</button>
-            <button type="button" class="calc-key calc-action" data-action="delete">Del</button>
-            <button type="button" class="calc-key" data-key="/">/</button>
-            <button type="button" class="calc-key" data-key="*">*</button>
+            <button type="button" class="calc-key calc-op" data-key="/">/</button>
+            <button type="button" class="calc-key calc-op" data-key="*">*</button>
+            <button type="button" class="calc-key calc-op" data-key="-">-</button>
+            <button type="button" class="calc-key calc-op" data-key="+">+</button>
 
             <button type="button" class="calc-key" data-key="7">7</button>
             <button type="button" class="calc-key" data-key="8">8</button>
             <button type="button" class="calc-key" data-key="9">9</button>
-            <button type="button" class="calc-key" data-key="-">-</button>
+            <button type="button" class="calc-key calc-action" data-action="delete">Del</button>
 
             <button type="button" class="calc-key" data-key="4">4</button>
             <button type="button" class="calc-key" data-key="5">5</button>
             <button type="button" class="calc-key" data-key="6">6</button>
-            <button type="button" class="calc-key" data-key="+">+</button>
+            <button type="button" class="calc-key calc-action" data-action="clear">C</button>
 
             <button type="button" class="calc-key" data-key="1">1</button>
             <button type="button" class="calc-key" data-key="2">2</button>
@@ -219,7 +219,6 @@
 
             <button type="button" class="calc-key calc-key-wide" data-key="0">0</button>
             <button type="button" class="calc-key" data-key=".">.</button>
-            <button type="button" class="calc-key calc-action" data-action="close">Close</button>
         </div>
     </div>
 </div>
@@ -238,7 +237,7 @@
         crossorigin="anonymous"></script>
 
 <script src="config.js"></script>
-<script src="script.js?version=61"></script>
+<script src="script.js?version=62"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -311,3 +310,4 @@
 </body>
 
 </html>
+

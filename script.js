@@ -1526,6 +1526,9 @@ const setupCalculatorKeypad = () => {
 
     const showCalculatorForInput = (input) => {
         if (!isMobileViewport()) return;
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
         calcTargetInput = input;
         calcExpression = input.value ? String(input.value) : '';
         updateCalcDisplay();
@@ -1533,6 +1536,7 @@ const setupCalculatorKeypad = () => {
         keypad.setAttribute('aria-hidden', 'false');
         document.body.classList.add('calc-open');
         setCalcInputReadonly(input, true);
+        input.blur();
     };
 
     const hideCalculator = () => {
@@ -1626,12 +1630,6 @@ const setupCalculatorKeypad = () => {
                 return;
             }
 
-            if (action === 'close') {
-                applyEvaluation();
-                hideCalculator();
-                return;
-            }
-
             if (key) {
                 addCalcChar(key);
                 syncInputIfNumber();
@@ -1649,6 +1647,13 @@ const setupCalculatorKeypad = () => {
         }, { passive: false });
         input.addEventListener('focus', () => showCalculatorForInput(input));
         input.addEventListener('click', () => showCalculatorForInput(input));
+    });
+
+    keypad.addEventListener('click', (event) => {
+        if (event.target === keypad) {
+            applyEvaluation();
+            hideCalculator();
+        }
     });
 
     window.addEventListener('resize', () => {

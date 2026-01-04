@@ -336,6 +336,7 @@ body:not(.dashboard-body) .calc-keypad .calc-key {
     color: #1f2a44;
     border-radius: 10px;
     font-size: 1rem;
+    font-weight: 600;
     min-height: 40px;
     padding: 8px 0;
     line-height: 1;
@@ -354,6 +355,13 @@ body:not(.dashboard-body) .calc-keypad .calc-key.calc-action {
     background: #1f2a44;
     color: #ffffff;
     border-color: #1f2a44;
+}
+
+body:not(.dashboard-body) .calc-keypad .calc-key.calc-op {
+    background: #eef1f7;
+    color: #5b667a;
+    border-color: rgba(31, 42, 68, 0.12);
+    font-weight: 500;
 }
 
 body:not(.dashboard-body) .calc-keypad .calc-key.calc-key-wide {
