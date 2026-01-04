@@ -370,7 +370,9 @@ body:not(.dashboard-body) .calc-keypad .calc-key.calc-key-wide {
 
 @media (max-width: 767px) {
     .calc-keypad {
-        display: block;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
     }
 
     .calc-keypad.is-hidden {
