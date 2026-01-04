@@ -308,7 +308,8 @@ body:not(.dashboard-body) .pagination .page-link:hover {
     border: 1px solid rgba(31, 42, 68, 0.12);
     box-shadow: 0 12px 28px rgba(31, 42, 68, 0.18);
     padding: 12px;
-    max-width: 420px;
+    width: 100%;
+    max-width: 520px;
     margin: auto auto 0;
 }
 
