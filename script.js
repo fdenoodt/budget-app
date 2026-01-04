@@ -1479,6 +1479,171 @@ const openPageSearch = () => {
     showExpensesSearch();
 }
 
+const setupCalculatorKeypad = () => {
+    const keypad = document.getElementById('calc-keypad');
+    const display = document.getElementById('calc_display');
+    if (!keypad || !display) return;
+
+    let calcTargetInput = null;
+    let calcExpression = '';
+
+    const isMobileViewport = () => window.matchMedia('(max-width: 767px)').matches;
+
+    const updateCalcDisplay = () => {
+        display.textContent = calcExpression || '0';
+    };
+
+    const setInputValue = (input, value) => {
+        if (!input) return;
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const setCalcInputReadonly = (input, enable) => {
+        if (!input) return;
+        if (enable) {
+            if (!input.hasAttribute('readonly')) {
+                input.dataset.calcReadonly = 'true';
+            }
+            input.setAttribute('readonly', 'readonly');
+        } else if (input.dataset.calcReadonly) {
+            input.removeAttribute('readonly');
+            delete input.dataset.calcReadonly;
+        }
+    };
+
+    const showCalculatorForInput = (input) => {
+        if (!isMobileViewport()) return;
+        calcTargetInput = input;
+        calcExpression = input.value ? String(input.value) : '';
+        updateCalcDisplay();
+        keypad.classList.remove('is-hidden');
+        keypad.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('calc-open');
+        setCalcInputReadonly(input, true);
+    };
+
+    const hideCalculator = () => {
+        if (calcTargetInput) {
+            setCalcInputReadonly(calcTargetInput, false);
+        }
+        calcTargetInput = null;
+        keypad.classList.add('is-hidden');
+        keypad.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('calc-open');
+    };
+
+    const canAddDot = (expr) => {
+        const last = expr.split(/[+\-*/]/).pop() || '';
+        return !last.includes('.');
+    };
+
+    const addCalcChar = (ch) => {
+        if ('0123456789'.includes(ch)) {
+            calcExpression += ch;
+            updateCalcDisplay();
+            return;
+        }
+
+        if (ch === '.') {
+            if (!calcExpression || /[+\-*/]$/.test(calcExpression)) {
+                calcExpression += '0';
+            }
+            if (canAddDot(calcExpression)) {
+                calcExpression += '.';
+                updateCalcDisplay();
+            }
+            return;
+        }
+
+        if ('+-*/'.includes(ch)) {
+            if (!calcExpression && ch !== '-') return;
+            if (/[+\-*/]$/.test(calcExpression)) {
+                calcExpression = calcExpression.slice(0, -1) + ch;
+            } else {
+                calcExpression += ch;
+            }
+            updateCalcDisplay();
+        }
+    };
+
+    const evaluateExpression = (expr) => {
+        let sanitized = expr.replace(/[^0-9+\-*/.]/g, '');
+        sanitized = sanitized.replace(/[+\-*/.]$/, '');
+        if (!sanitized) return null;
+        try {
+            const result = Function(`"use strict"; return (${sanitized})`)();
+            if (!Number.isFinite(result)) return null;
+            return result;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const applyEvaluation = () => {
+        const result = evaluateExpression(calcExpression);
+        if (result === null) return;
+        const rounded = Math.round(result * 100) / 100;
+        const formatted = rounded.toFixed(2);
+        calcExpression = formatted;
+        updateCalcDisplay();
+        setInputValue(calcTargetInput, formatted);
+    };
+
+    keypad.querySelectorAll('.calc-key').forEach((button) => {
+        button.addEventListener('click', () => {
+            const action = button.getAttribute('data-action');
+            const key = button.getAttribute('data-key');
+
+            if (action === 'clear') {
+                calcExpression = '';
+                updateCalcDisplay();
+                setInputValue(calcTargetInput, '');
+                return;
+            }
+
+            if (action === 'delete') {
+                calcExpression = calcExpression.slice(0, -1);
+                updateCalcDisplay();
+                return;
+            }
+
+            if (action === 'equals') {
+                applyEvaluation();
+                return;
+            }
+
+            if (action === 'close') {
+                applyEvaluation();
+                hideCalculator();
+                return;
+            }
+
+            if (key) {
+                addCalcChar(key);
+            }
+        });
+    });
+
+    ['inp_price', 'inp_price_me', 'inp_price_other'].forEach((id) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener('touchstart', (event) => {
+            if (!isMobileViewport()) return;
+            event.preventDefault();
+            showCalculatorForInput(input);
+        }, { passive: false });
+        input.addEventListener('focus', () => showCalculatorForInput(input));
+        input.addEventListener('click', () => showCalculatorForInput(input));
+    });
+
+    window.addEventListener('resize', () => {
+        if (!isMobileViewport()) {
+            hideCalculator();
+        }
+    });
+};
+
 const showExpensesSearch = () => {
     const container = document.getElementById('expenses_search');
     const input = document.getElementById('expenses_search_input');
@@ -1642,6 +1807,7 @@ const updateNavigationButtons = () => {
 }
 
 setupExpensesSearch();
+setupCalculatorKeypad();
 
 inp_price.addEventListener('input', () => {
     update();

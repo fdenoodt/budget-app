@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=61">
+    <link rel="stylesheet" href="style.css?version=62">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -193,6 +193,36 @@
     </div>
 
 </div>
+<div id="calc-keypad" class="calc-keypad is-hidden" aria-hidden="true">
+    <div class="calc-keypad-card" role="dialog" aria-label="Calculator keypad">
+        <div class="calc-display" id="calc_display">0</div>
+        <div class="calc-grid">
+            <button type="button" class="calc-key calc-action" data-action="clear">C</button>
+            <button type="button" class="calc-key calc-action" data-action="delete">Del</button>
+            <button type="button" class="calc-key" data-key="/">/</button>
+            <button type="button" class="calc-key" data-key="*">*</button>
+
+            <button type="button" class="calc-key" data-key="7">7</button>
+            <button type="button" class="calc-key" data-key="8">8</button>
+            <button type="button" class="calc-key" data-key="9">9</button>
+            <button type="button" class="calc-key" data-key="-">-</button>
+
+            <button type="button" class="calc-key" data-key="4">4</button>
+            <button type="button" class="calc-key" data-key="5">5</button>
+            <button type="button" class="calc-key" data-key="6">6</button>
+            <button type="button" class="calc-key" data-key="+">+</button>
+
+            <button type="button" class="calc-key" data-key="1">1</button>
+            <button type="button" class="calc-key" data-key="2">2</button>
+            <button type="button" class="calc-key" data-key="3">3</button>
+            <button type="button" class="calc-key calc-action" data-action="equals">=</button>
+
+            <button type="button" class="calc-key calc-key-wide" data-key="0">0</button>
+            <button type="button" class="calc-key" data-key=".">.</button>
+            <button type="button" class="calc-key calc-action" data-action="close">Close</button>
+        </div>
+    </div>
+</div>
 <!-- Optional JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -208,7 +238,7 @@
         crossorigin="anonymous"></script>
 
 <script src="config.js"></script>
-<script src="script.js?version=59"></script>
+<script src="script.js?version=60"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
