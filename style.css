@@ -279,6 +279,38 @@ body:not(.dashboard-body) .pagination .page-link:hover {
     background-color: #e7ebf2;
 }
 
+.expenses-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.expenses-search.is-hidden {
+    display: none;
+}
+
+.expenses-search input {
+    width: 240px;
+    max-width: 70vw;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(31, 42, 68, 0.18);
+    box-shadow: 0 6px 16px rgba(36, 50, 75, 0.06);
+}
+
+.expenses-search input:focus {
+    outline-width: 0;
+    border: solid 1px #707070;
+}
+
+.expenses-search-clear {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 14px;
+}
+
 
 #lbl_name {
     /* underline */

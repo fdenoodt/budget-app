@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=60">
+    <link rel="stylesheet" href="style.css?version=61">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -152,8 +152,8 @@
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" onclick="openPageSearch()" title="Find on page"
-                                   aria-label="Find on page">
+                                <a class="page-link" onclick="openPageSearch()" title="Search expenses"
+                                   aria-label="Search expenses">
                                     <i class="fa" style="color: #3e3e3e; font-weight: lighter">&#xf002;</i>
                                 </a>
                             </li>
@@ -173,6 +173,13 @@
                                                                                   class="page-link">&raquo;</a></li>
                         </ul>
                     </nav>
+                    <div id="expenses_search" class="expenses-search is-hidden">
+                        <input id="expenses_search_input" type="text" placeholder="Search expenses..."
+                               aria-label="Search expenses" autocomplete="off">
+                        <button id="expenses_search_clear" type="button" class="button expenses-search-clear">
+                            Clear
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -201,7 +208,7 @@
         crossorigin="anonymous"></script>
 
 <script src="config.js"></script>
-<script src="script.js?version=58"></script>
+<script src="script.js?version=59"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {

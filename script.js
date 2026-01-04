@@ -13,6 +13,7 @@ let EXPENSES_ALL = null;
 let EXPENSES_BY_ID = new Map();
 let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
 let CURRENT_MONTHLY_ALLOWANCE = Infinity; // updated from server data
+let EXPENSES_SEARCH_QUERY = '';
 
 
 const FABIAN = 'Fabian';
@@ -323,7 +324,6 @@ function renderData(data) {
     fillDescriptions(historicDescriptions);
 
     updateDebts(fabian, elisa);
-    updateExpensesAll(expenses);
 
     if (monthlySaved.length === 0) {
         alert("It's probably the beginning of the month and you haven't included data yet. please do that first before looking at the statistics");
@@ -346,6 +346,7 @@ function renderData(data) {
     new LineGraphs().display(monthlySaved, monthlyEarned, getMonthFromUrlParam()); // displays monthly saved and monthly earned graphs
 
     ALL_EXPENSES = expenses;
+    applyExpensesSearch(EXPENSES_SEARCH_QUERY);
 }
 
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
@@ -1465,6 +1466,7 @@ const editName = () => {
 
 
 const clearExpensesFilter = () => {
+    clearExpensesSearch();
     updateExpensesAll(ALL_EXPENSES);
 }
 
@@ -1474,30 +1476,101 @@ const showOnlyPaidByMe = () => {
 }
 
 const openPageSearch = () => {
-    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-    let opened = false;
+    showExpensesSearch();
+}
 
-    try {
-        opened = document.execCommand('find');
-    } catch (e) {
-        opened = false;
+const showExpensesSearch = () => {
+    const container = document.getElementById('expenses_search');
+    const input = document.getElementById('expenses_search_input');
+    if (!container || !input) return;
+    container.classList.remove('is-hidden');
+    input.focus();
+    input.select();
+}
+
+const hideExpensesSearch = () => {
+    const container = document.getElementById('expenses_search');
+    if (!container) return;
+    container.classList.add('is-hidden');
+}
+
+const clearExpensesSearch = () => {
+    EXPENSES_SEARCH_QUERY = '';
+    const input = document.getElementById('expenses_search_input');
+    if (input) input.value = '';
+}
+
+const applyExpensesSearch = (query) => {
+    if (!ALL_EXPENSES) return;
+    const normalized = (query || '').trim().toLowerCase();
+    EXPENSES_SEARCH_QUERY = normalized;
+
+    if (!normalized) {
+        updateExpensesAll(ALL_EXPENSES);
+        return;
     }
 
-    if (!opened) {
-        const event = new KeyboardEvent('keydown', {
-            key: 'f',
-            code: 'KeyF',
-            ctrlKey: !isMac,
-            metaKey: isMac,
-            bubbles: true,
-            cancelable: true,
-        });
-        document.dispatchEvent(event);
-    }
+    const terms = normalized.split(/[\s,]+/).filter(Boolean);
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const results = ALL_EXPENSES.filter(expense => {
+        const category = expense.category || '';
+        const description = expense.description || '';
+        const paidBy = expense.paid_by || '';
+        const date = expense.date || '';
+        const total = (expense.price_fabian || 0) + (expense.price_elisa || 0);
+        const totalAbs = Math.abs(total);
+        const fabianAbs = Math.abs(expense.price_fabian || 0);
+        const elisaAbs = Math.abs(expense.price_elisa || 0);
 
-    if (!opened) {
-        alert(`Press ${isMac ? 'Cmd' : 'Ctrl'}+F to search this page.`);
-    }
+        let monthName = '';
+        if (typeof date === 'string') {
+            const parts = date.split('-');
+            if (parts.length >= 2) {
+                const monthIndex = parseInt(parts[1], 10) - 1;
+                monthName = monthNames[monthIndex] || '';
+            }
+        }
+
+        const haystack = [
+            category,
+            description,
+            paidBy,
+            date,
+            monthName,
+            totalAbs.toFixed(2),
+            totalAbs.toFixed(0),
+            fabianAbs.toFixed(2),
+            elisaAbs.toFixed(2)
+        ].join(' ').toLowerCase();
+
+        return terms.some(term => haystack.includes(term));
+    });
+
+    updateExpensesAll(results);
+}
+
+const setupExpensesSearch = () => {
+    const input = document.getElementById('expenses_search_input');
+    const clearBtn = document.getElementById('expenses_search_clear');
+    if (!input || !clearBtn) return;
+
+    input.addEventListener('input', (event) => {
+        applyExpensesSearch(event.target.value);
+    });
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            clearExpensesSearch();
+            updateExpensesAll(ALL_EXPENSES);
+            hideExpensesSearch();
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        clearExpensesSearch();
+        updateExpensesAll(ALL_EXPENSES);
+        input.focus();
+    });
 }
 
 // for select tags
@@ -1568,6 +1641,7 @@ const updateNavigationButtons = () => {
 
 }
 
+setupExpensesSearch();
 
 inp_price.addEventListener('input', () => {
     update();
