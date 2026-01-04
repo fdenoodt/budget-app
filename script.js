@@ -1649,12 +1649,14 @@ const setupCalculatorKeypad = () => {
         input.addEventListener('click', () => showCalculatorForInput(input));
     });
 
-    keypad.addEventListener('click', (event) => {
-        if (event.target === keypad) {
-            applyEvaluation();
-            hideCalculator();
-        }
-    });
+    const handleOutsideTap = (event) => {
+        if (keypad.classList.contains('is-hidden')) return;
+        if (event.target.closest('.calc-keypad-card')) return;
+        applyEvaluation();
+        hideCalculator();
+    };
+
+    document.addEventListener('pointerdown', handleOutsideTap, true);
 
     window.addEventListener('resize', () => {
         if (!isMobileViewport()) {

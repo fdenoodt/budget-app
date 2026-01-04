@@ -294,22 +294,22 @@ body:not(.dashboard-body) .pagination .page-link:hover {
 
 .calc-keypad {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 12000;
     padding: 12px;
     display: none;
+    pointer-events: none;
 }
 
 .calc-keypad-card {
+    pointer-events: auto;
     background: #ffffff;
     border-radius: 16px;
     border: 1px solid rgba(31, 42, 68, 0.12);
     box-shadow: 0 12px 28px rgba(31, 42, 68, 0.18);
     padding: 12px;
     max-width: 420px;
-    margin: 0 auto;
+    margin: auto auto 0;
 }
 
 .calc-display {
@@ -366,10 +366,6 @@ body:not(.dashboard-body) .calc-keypad .calc-key.calc-op {
 
 body:not(.dashboard-body) .calc-keypad .calc-key.calc-key-wide {
     grid-column: span 2;
-}
-
-body.calc-open {
-    overflow: hidden;
 }
 
 @media (max-width: 767px) {
