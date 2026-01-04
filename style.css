@@ -242,6 +242,19 @@ body:not(.dashboard-body) #div_expenses {
 }
 
 @media (max-width: 767px) {
+    body:not(.dashboard-body) #main {
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .margin {
+        margin: 24px 12px;
+    }
+
+    .margin-side {
+        margin: 0 12px;
+    }
+
     body:not(.dashboard-body) #div_price,
     body:not(.dashboard-body) #div_categories,
     body:not(.dashboard-body) #div_submit,
@@ -256,8 +269,8 @@ body:not(.dashboard-body) #div_expenses {
 
     body:not(.dashboard-body) #div_debts,
     body:not(.dashboard-body) #div_budget_statistics {
-        margin-left: 20px;
-        margin-right: 20px;
+        margin-left: 12px;
+        margin-right: 12px;
     }
 }
 
