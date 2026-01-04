@@ -336,7 +336,12 @@ body:not(.dashboard-body) .calc-keypad .calc-key {
     color: #1f2a44;
     border-radius: 10px;
     font-size: 1rem;
-    padding: 10px 0;
+    min-height: 40px;
+    padding: 8px 0;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     box-shadow: none;
 }

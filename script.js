@@ -1493,6 +1493,18 @@ const setupCalculatorKeypad = () => {
         display.textContent = calcExpression || '0';
     };
 
+    const syncInputIfNumber = () => {
+        if (!calcTargetInput) return;
+        if (!calcExpression) {
+            setInputValue(calcTargetInput, '');
+            return;
+        }
+        const isSimpleNumber = /^-?\d*\.?\d*$/.test(calcExpression);
+        if (isSimpleNumber) {
+            setInputValue(calcTargetInput, calcExpression);
+        }
+    };
+
     const setInputValue = (input, value) => {
         if (!input) return;
         input.value = value;
@@ -1598,13 +1610,14 @@ const setupCalculatorKeypad = () => {
             if (action === 'clear') {
                 calcExpression = '';
                 updateCalcDisplay();
-                setInputValue(calcTargetInput, '');
+                syncInputIfNumber();
                 return;
             }
 
             if (action === 'delete') {
                 calcExpression = calcExpression.slice(0, -1);
                 updateCalcDisplay();
+                syncInputIfNumber();
                 return;
             }
 
@@ -1621,6 +1634,7 @@ const setupCalculatorKeypad = () => {
 
             if (key) {
                 addCalcChar(key);
+                syncInputIfNumber();
             }
         });
     });
