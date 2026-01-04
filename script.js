@@ -1630,6 +1630,12 @@ const setupCalculatorKeypad = () => {
                 return;
             }
 
+            if (action === 'close') {
+                applyEvaluation();
+                hideCalculator();
+                return;
+            }
+
             if (key) {
                 addCalcChar(key);
                 syncInputIfNumber();
