@@ -70,12 +70,20 @@ body:not(.dashboard-body) #div_budget_statistics {
     border: 1px solid rgba(31, 42, 68, 0.08);
     box-shadow: 0 10px 25px rgba(36, 50, 75, 0.08);
     padding: 10px 14px;
+    min-height: 56px;
+    box-sizing: border-box;
 }
 #div_debts {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+}
+
+#div_budget_statistics {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dashboard-icon {
