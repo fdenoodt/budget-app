@@ -1526,6 +1526,11 @@ const setupCalculatorKeypad = () => {
 
     const showCalculatorForInput = (input) => {
         if (!isMobileViewport()) return;
+        if (!keypad.classList.contains('is-hidden') && calcTargetInput === input) {
+            applyEvaluation();
+            hideCalculator();
+            return;
+        }
         if (document.activeElement && document.activeElement !== document.body) {
             document.activeElement.blur();
         }
