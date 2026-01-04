@@ -1473,6 +1473,33 @@ const showOnlyPaidByMe = () => {
     updateExpensesAll(expenses);
 }
 
+const openPageSearch = () => {
+    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+    let opened = false;
+
+    try {
+        opened = document.execCommand('find');
+    } catch (e) {
+        opened = false;
+    }
+
+    if (!opened) {
+        const event = new KeyboardEvent('keydown', {
+            key: 'f',
+            code: 'KeyF',
+            ctrlKey: !isMac,
+            metaKey: isMac,
+            bubbles: true,
+            cancelable: true,
+        });
+        document.dispatchEvent(event);
+    }
+
+    if (!opened) {
+        alert(`Press ${isMac ? 'Cmd' : 'Ctrl'}+F to search this page.`);
+    }
+}
+
 // for select tags
 const fillCategoriesList = () => {
     const lst_categories_basics = document.getElementById('lst_categories_basics');
