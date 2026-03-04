@@ -23,6 +23,17 @@ const data = {
     price: 0, ratio: 100, category: '', description: '',
 }
 
+const parseBudgetNumber = (value) => {
+    if (value === null || value === undefined) return 0;
+    const normalized = String(value).trim().replace(',', '.');
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatBudgetNumber = (value, decimals = 2) => {
+    return Number(value).toFixed(decimals).replace('.', ',');
+};
+
 // *** authentication ***
 function getKey() {
     return localStorage.getItem("budget_key")
@@ -245,11 +256,13 @@ const readName = () => {
 
 const update = () => {
     // round to 2 decimals
-    inp_price_me.value = (inp_price.value * (inp_ratio.value / 100)).toFixed(2);
-    inp_price_other.value = (inp_price.value * ((100 - inp_ratio.value) / 100)).toFixed(2);
+    const total = parseBudgetNumber(inp_price.value);
+    const ratio = parseBudgetNumber(inp_ratio.value);
+    inp_price_me.value = formatBudgetNumber(total * (ratio / 100));
+    inp_price_other.value = formatBudgetNumber(total * ((100 - ratio) / 100));
 
-    data.price = inp_price.value;
-    data.ratio = inp_ratio.value;
+    data.price = total;
+    data.ratio = ratio;
 }
 
 
@@ -1308,7 +1321,7 @@ const updateExpensesAll = (expenses) => {
 
 
 const checkSubmit = () => {
-    if (inp_price.value != '' && inp_price.value != 0 && data.category != '') {
+    if (inp_price.value !== '' && parseBudgetNumber(inp_price.value) !== 0 && data.category != '') {
         btn_submit.disabled = false;
     } else {
         btn_submit.disabled = true;
@@ -1362,8 +1375,8 @@ const submit = () => {
     // send data to server
     const category = data.category;
 
-    let price_me = inp_price_me.value;
-    let price_other = inp_price_other.value;
+    let price_me = parseBudgetNumber(inp_price_me.value);
+    let price_other = parseBudgetNumber(inp_price_other.value);
     if (category === 'Inkomst') { // make negative
         price_me = -Math.abs(price_me);
         price_other = -Math.abs(price_other);
@@ -1376,7 +1389,7 @@ const submit = () => {
     const subcategory = null;
     const description = document.getElementById('inp_description').value;
 
-    const fullUrl = `${url}/add_expense?price_fabian=${price_fabian}&price_elisa=${price_elisa}&paid_by=${paidBy}&category=${category}&subcategory=${subcategory}&description=${description}`;
+    const fullUrl = `${url}/add_expense?price_fabian=${price_fabian.toFixed(2)}&price_elisa=${price_elisa.toFixed(2)}&paid_by=${paidBy}&category=${category}&subcategory=${subcategory}&description=${description}`;
 
     // Cache when holidays are added so in future the category is by default 'Reizen'
     if (category === 'Reizen') {
@@ -1487,7 +1500,11 @@ const setupCalculatorKeypad = () => {
     let calcTargetInput = null;
     let calcExpression = '';
 
-    const isMobileViewport = () => window.matchMedia('(max-width: 767px)').matches;
+    const shouldUseCustomKeypad = () => {
+        return window.matchMedia('(pointer: coarse)').matches ||
+            window.matchMedia('(hover: none)').matches ||
+            /iPad|iPhone|iPod/.test(navigator.userAgent);
+    };
 
     const updateCalcDisplay = () => {
         display.textContent = calcExpression || '0';
@@ -1499,7 +1516,7 @@ const setupCalculatorKeypad = () => {
             setInputValue(calcTargetInput, '');
             return;
         }
-        const isSimpleNumber = /^-?\d*\.?\d*$/.test(calcExpression);
+        const isSimpleNumber = /^-?\d*(?:[.,]\d*)?$/.test(calcExpression);
         if (isSimpleNumber) {
             setInputValue(calcTargetInput, calcExpression);
         }
@@ -1525,7 +1542,7 @@ const setupCalculatorKeypad = () => {
     };
 
     const showCalculatorForInput = (input) => {
-        if (!isMobileViewport()) return;
+        if (!shouldUseCustomKeypad()) return;
         if (!keypad.classList.contains('is-hidden') && calcTargetInput === input) {
             applyEvaluation();
             hideCalculator();
@@ -1554,9 +1571,9 @@ const setupCalculatorKeypad = () => {
         document.body.classList.remove('calc-open');
     };
 
-    const canAddDot = (expr) => {
+    const canAddDecimal = (expr) => {
         const last = expr.split(/[+\-*/]/).pop() || '';
-        return !last.includes('.');
+        return !last.includes('.') && !last.includes(',');
     };
 
     const addCalcChar = (ch) => {
@@ -1566,12 +1583,12 @@ const setupCalculatorKeypad = () => {
             return;
         }
 
-        if (ch === '.') {
+        if (ch === '.' || ch === ',') {
             if (!calcExpression || /[+\-*/]$/.test(calcExpression)) {
                 calcExpression += '0';
             }
-            if (canAddDot(calcExpression)) {
-                calcExpression += '.';
+            if (canAddDecimal(calcExpression)) {
+                calcExpression += ',';
                 updateCalcDisplay();
             }
             return;
@@ -1589,7 +1606,7 @@ const setupCalculatorKeypad = () => {
     };
 
     const evaluateExpression = (expr) => {
-        let sanitized = expr.replace(/[^0-9+\-*/.]/g, '');
+        let sanitized = expr.replace(/,/g, '.').replace(/[^0-9+\-*/.]/g, '');
         sanitized = sanitized.replace(/[+\-*/.]$/, '');
         if (!sanitized) return null;
         try {
@@ -1605,7 +1622,7 @@ const setupCalculatorKeypad = () => {
         const result = evaluateExpression(calcExpression);
         if (result === null) return;
         const rounded = Math.round(result * 100) / 100;
-        const formatted = rounded.toFixed(2);
+        const formatted = rounded.toFixed(2).replace('.', ',');
         calcExpression = formatted;
         updateCalcDisplay();
         setInputValue(calcTargetInput, formatted);
@@ -1652,10 +1669,15 @@ const setupCalculatorKeypad = () => {
         const input = document.getElementById(id);
         if (!input) return;
         input.addEventListener('touchstart', (event) => {
-            if (!isMobileViewport()) return;
+            if (!shouldUseCustomKeypad()) return;
             event.preventDefault();
             showCalculatorForInput(input);
         }, { passive: false });
+        input.addEventListener('pointerdown', (event) => {
+            if (!shouldUseCustomKeypad()) return;
+            event.preventDefault();
+            showCalculatorForInput(input);
+        });
         input.addEventListener('focus', () => showCalculatorForInput(input));
         input.addEventListener('click', () => showCalculatorForInput(input));
     });
@@ -1670,7 +1692,7 @@ const setupCalculatorKeypad = () => {
     document.addEventListener('pointerdown', handleOutsideTap, true);
 
     window.addEventListener('resize', () => {
-        if (!isMobileViewport()) {
+        if (!shouldUseCustomKeypad()) {
             hideCalculator();
         }
     });
@@ -1855,10 +1877,12 @@ inp_price_me.addEventListener('input', () => {
     checkSubmit();
 
     // change value of inp_price_other accordingly
-    inp_price_other.value = (inp_price.value - inp_price_me.value).toFixed(2);
+    const total = parseBudgetNumber(inp_price.value);
+    const me = parseBudgetNumber(inp_price_me.value);
+    inp_price_other.value = formatBudgetNumber(total - me);
 
     //update slider
-    inp_ratio.value = (inp_price_me.value / inp_price.value * 100).toFixed(0);
+    inp_ratio.value = total === 0 ? 0 : (me / total * 100).toFixed(0);
     lbl_percent.innerHTML = inp_ratio.value + '%';
 });
 
@@ -1866,10 +1890,13 @@ inp_price_other.addEventListener('input', () => {
     checkSubmit();
 
     // change value of inp_price_me accordingly
-    inp_price_me.value = (inp_price.value - inp_price_other.value).toFixed(2);
+    const total = parseBudgetNumber(inp_price.value);
+    const other = parseBudgetNumber(inp_price_other.value);
+    inp_price_me.value = formatBudgetNumber(total - other);
 
     //update slider
-    inp_ratio.value = (inp_price_me.value / inp_price.value * 100).toFixed(0);
+    const me = parseBudgetNumber(inp_price_me.value);
+    inp_ratio.value = total === 0 ? 0 : (me / total * 100).toFixed(0);
     lbl_percent.innerHTML = inp_ratio.value + '%';
 });
 
