@@ -156,9 +156,7 @@ input[name="inp_description"],
 input[type=text],
 input[type=date],
 input[type=number],
-#inp_price,
-#inp_price_me,
-#inp_price_other {
+#inp_price {
     padding: 10px;
     border: solid 1px #dcdcdc;
     transition: box-shadow 0.3s, border 0.3s;
@@ -173,8 +171,6 @@ body:not(.dashboard-body) input[type=text],
 body:not(.dashboard-body) input[type=date],
 body:not(.dashboard-body) input[type=number],
 body:not(.dashboard-body) #inp_price,
-body:not(.dashboard-body) #inp_price_me,
-body:not(.dashboard-body) #inp_price_other,
 body:not(.dashboard-body) select {
     border-radius: 10px;
     border: 1px solid rgba(31, 42, 68, 0.18);
@@ -196,20 +192,12 @@ input[type=text] {
     display: inline-block;
 }
 
-#inp_price_me,
-#inp_price_other {
-    width: 5em;
-    text-align: center;
-}
-
 input[name="inp_description"]:focus,
 input[type=text]:focus,
 select:focus,
 input[type=date]:focus,
 input[type=number]:focus,
-#inp_price:focus,
-#inp_price_me:focus,
-#inp_price_other:focus {
+#inp_price:focus {
     outline-width: 0;
     border: solid 1px #707070;
 }
