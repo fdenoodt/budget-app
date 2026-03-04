@@ -1499,6 +1499,7 @@ const setupCalculatorKeypad = () => {
 
     let calcTargetInput = null;
     let calcExpression = '';
+    let lastShowAt = 0;
 
     const shouldUseCustomKeypad = () => {
         return window.matchMedia('(pointer: coarse)').matches ||
@@ -1543,9 +1544,14 @@ const setupCalculatorKeypad = () => {
 
     const showCalculatorForInput = (input) => {
         if (!shouldUseCustomKeypad()) return;
+        const now = Date.now();
+        if (now - lastShowAt < 250 && calcTargetInput === input) {
+            return;
+        }
+        lastShowAt = now;
+
+        // Do not toggle-close when tapping the same input again.
         if (!keypad.classList.contains('is-hidden') && calcTargetInput === input) {
-            applyEvaluation();
-            hideCalculator();
             return;
         }
         if (document.activeElement && document.activeElement !== document.body) {
@@ -1678,8 +1684,8 @@ const setupCalculatorKeypad = () => {
             event.preventDefault();
             showCalculatorForInput(input);
         });
+        // Keep focus handler as fallback for browsers that do not fire pointer events consistently.
         input.addEventListener('focus', () => showCalculatorForInput(input));
-        input.addEventListener('click', () => showCalculatorForInput(input));
     });
 
     const handleOutsideTap = (event) => {
