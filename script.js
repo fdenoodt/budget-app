@@ -2042,11 +2042,13 @@ const openEditExpenseById = (id) => {
         payload.set('category', categorySelect.value);
         payload.set('description', descriptionInput.value || '');
 
-        const totalValue = parseFloat(totalInput.value) || 0;
-        const ratioValue = parseFloat(ratioInput.value) || 50;
-        const signedTotal = categorySelect.value === 'Inkomst' ? -Math.abs(totalValue) : Math.abs(totalValue);
-        const priceFabian = signedTotal * (ratioValue / 100);
-        const priceElisa = signedTotal - priceFabian;
+        // Source of truth for saving: explicit split inputs.
+        // (Before this, save used total+ratio and could ignore manually edited split values.)
+        const fabianAbs = Math.abs(parseFloat(fabianInput.value) || 0);
+        const elisaAbs = Math.abs(parseFloat(elisaInput.value) || 0);
+        const sign = categorySelect.value === 'Inkomst' ? -1 : 1;
+        const priceFabian = sign * fabianAbs;
+        const priceElisa = sign * elisaAbs;
         payload.set('price_fabian', priceFabian.toFixed(2));
         payload.set('price_elisa', priceElisa.toFixed(2));
 
