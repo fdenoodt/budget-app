@@ -14,6 +14,10 @@ let EXPENSES_BY_ID = new Map();
 let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
 let CURRENT_MONTHLY_ALLOWANCE = Infinity; // updated from server data
 let EXPENSES_SEARCH_QUERY = '';
+let BANK_PENDING_TRANSACTIONS = [];
+let SELECTED_PENDING_BANK_TRANSACTION_ID = null;
+let SELECTED_PENDING_BANK_TRANSACTION_DATE = null;
+let BANK_SYNC_INTERVAL_ID = null;
 
 
 const FABIAN = 'Fabian';
@@ -1370,6 +1374,316 @@ const resetCategorySelection = () => {
     checkSubmit();
 }
 
+const escapeHtml = (value) => {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+}
+
+const setBankImportStatus = (message) => {
+    const el = document.getElementById('bank_import_status');
+    if (!el) return;
+    el.textContent = message || '';
+}
+
+const setBankConnectionStatus = (message) => {
+    const el = document.getElementById('bank_connection_status');
+    if (!el) return;
+    el.textContent = message || '';
+}
+
+const formatDateForDisplay = (isoDate) => {
+    if (!isoDate) return '';
+    const parts = String(isoDate).split('-');
+    if (parts.length !== 3) return isoDate;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+const getPendingBankTransactionDisplayText = (tx) => {
+    const merchant = (tx.counterparty || '').trim();
+    const remittance = (tx.remittance || '').trim();
+    if (merchant && remittance) return `${merchant} ${remittance}`;
+    return merchant || remittance || 'Bank payment';
+}
+
+const buildSuggestedDescriptionFromPending = (tx) => {
+    const fullText = getPendingBankTransactionDisplayText(tx).toLowerCase();
+    const words = fullText.split(/[^a-z0-9]+/i).filter(Boolean);
+
+    const descriptionsEl = document.getElementById('descriptions');
+    if (!descriptionsEl) return getPendingBankTransactionDisplayText(tx).slice(0, 80);
+
+    const historic = Array.from(descriptionsEl.querySelectorAll('option'))
+        .map(option => (option.value || '').trim())
+        .filter(Boolean);
+
+    let best = '';
+    let bestScore = 0;
+    historic.forEach(desc => {
+        const lower = desc.toLowerCase();
+        let score = 0;
+        words.forEach(word => {
+            if (word.length >= 4 && lower.includes(word)) score += 1;
+        });
+        if (score > bestScore) {
+            bestScore = score;
+            best = desc;
+        }
+    });
+
+    if (bestScore > 0) return best;
+    const fallback = getPendingBankTransactionDisplayText(tx).slice(0, 80).trim();
+    return fallback || 'Bank expense';
+}
+
+const clearSelectedPendingBankTransaction = () => {
+    SELECTED_PENDING_BANK_TRANSACTION_ID = null;
+    SELECTED_PENDING_BANK_TRANSACTION_DATE = null;
+}
+
+const renderPendingBankTransactions = () => {
+    const listEl = document.getElementById('bank_pending_list');
+    const countEl = document.getElementById('bank_pending_count');
+    if (!listEl || !countEl) return;
+
+    countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
+    if (BANK_PENDING_TRANSACTIONS.length === 0) {
+        listEl.innerHTML = '<li class="bank-pending-item bank-pending-meta">No pending bank expenses.</li>';
+        return;
+    }
+
+    listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(tx => {
+        const absAmount = Math.abs(parseBudgetNumber(tx.amount));
+        const date = tx.booked_date || tx.value_date || '';
+        const merchant = tx.counterparty || 'Unknown merchant';
+        const details = tx.remittance || '';
+        const suggested = buildSuggestedDescriptionFromPending(tx);
+        return `
+            <li class="bank-pending-item" data-bank-id="${tx.id}">
+                <div class="bank-pending-main">
+                    <span class="bank-pending-merchant">${escapeHtml(merchant)}</span>
+                    <span class="bank-pending-amount">EUR ${absAmount.toFixed(2)}</span>
+                </div>
+                <div class="bank-pending-meta">${escapeHtml(formatDateForDisplay(date))} ${details ? '&middot; ' + escapeHtml(details) : ''}</div>
+                <div class="bank-pending-meta">Suggestion: ${escapeHtml(suggested)}</div>
+                <div class="bank-pending-actions">
+                    <button type="button" class="bank-pending-action primary" data-action="use">Fill in app</button>
+                    <button type="button" class="bank-pending-action" data-action="dismiss">Dismiss</button>
+                </div>
+            </li>
+        `;
+    }).join('');
+
+    listEl.querySelectorAll('.bank-pending-item').forEach(item => {
+        const id = Number(item.dataset.bankId);
+        const tx = BANK_PENDING_TRANSACTIONS.find(t => Number(t.id) === id);
+        if (!tx) return;
+
+        const useBtn = item.querySelector('[data-action="use"]');
+        const dismissBtn = item.querySelector('[data-action="dismiss"]');
+
+        useBtn?.addEventListener('click', () => {
+            SELECTED_PENDING_BANK_TRANSACTION_ID = Number(tx.id);
+            SELECTED_PENDING_BANK_TRANSACTION_DATE = tx.booked_date || tx.value_date || null;
+
+            const amount = Math.abs(parseBudgetNumber(tx.amount));
+            inp_price.value = formatBudgetNumber(amount);
+            update();
+            checkSubmit();
+
+            const descriptionInput = document.getElementById('inp_description');
+            if (descriptionInput) {
+                descriptionInput.value = buildSuggestedDescriptionFromPending(tx);
+                descriptionInput.focus();
+            }
+
+            setBankImportStatus(`Selected bank transaction #${tx.id}. Choose category/split and press Submit.`);
+        });
+
+        dismissBtn?.addEventListener('click', () => {
+            dismissPendingBankTransaction(tx.id);
+        });
+    });
+}
+
+const fetchPendingBankTransactions = () => {
+    return betterFetch(`${url}/bank/pending`)
+        .then(response => response.json())
+        .then(result => {
+            BANK_PENDING_TRANSACTIONS = (result.pending || []).filter(tx => parseBudgetNumber(tx.amount) < 0);
+            renderPendingBankTransactions();
+        })
+        .catch(handleError);
+}
+
+const fetchBankConnections = () => {
+    return betterFetch(`${url}/bank/connections`)
+        .then(response => response.json())
+        .then(result => {
+            const connections = result.connections || [];
+            if (connections.length === 0) {
+                setBankConnectionStatus('Not connected yet.');
+            } else {
+                const synced = connections.filter(conn => !!conn.last_synced_at).length;
+                setBankConnectionStatus(`Connected accounts: ${connections.length}. Synced: ${synced}/${connections.length}.`);
+            }
+            return connections;
+        })
+        .catch(err => {
+            setBankConnectionStatus('Bank connection unavailable. Check backend settings.');
+            handleError(err);
+            return [];
+        });
+}
+
+const syncBankTransactions = (isAuto = false) => {
+    return betterFetch(`${url}/bank/sync`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                if (!isAuto) setBankConnectionStatus(`Sync error: ${result.error}`);
+                return result;
+            }
+            BANK_PENDING_TRANSACTIONS = (result.pending || []).filter(tx => parseBudgetNumber(tx.amount) < 0);
+            renderPendingBankTransactions();
+            fetchBankConnections();
+            const prefix = isAuto ? 'Auto sync' : 'Sync';
+            setBankImportStatus(`${prefix}: ${result.imported || 0} new, ${result.duplicates || 0} duplicates.`);
+            return result;
+        })
+        .catch(err => {
+            if (!isAuto) handleError(err);
+            return null;
+        });
+}
+
+const maybeConfirmBankConnectionFromReturn = () => {
+    const params = new URLSearchParams(window.location.search);
+    const fromBank = params.get('bank_connect_return') === '1';
+    const flowId = localStorage.getItem('pending_bank_flow_id');
+    const provider = localStorage.getItem('pending_bank_provider');
+    const code = params.get('code');
+    if (!fromBank) return Promise.resolve();
+    if (!flowId && !code) return Promise.resolve();
+
+    setBankConnectionStatus('Confirming bank connection...');
+    const confirmParams = new URLSearchParams();
+    if (flowId) confirmParams.set('flow_id', flowId);
+    if (code) confirmParams.set('code', code);
+    return betterFetch(`${url}/bank/connect/confirm?${confirmParams.toString()}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) throw new Error(result.error);
+            localStorage.removeItem('pending_bank_flow_id');
+            localStorage.removeItem('pending_bank_provider');
+            params.delete('bank_connect_return');
+            if (provider === 'enablebanking') {
+                params.delete('code');
+                params.delete('state');
+                params.delete('error');
+                params.delete('error_description');
+            }
+            const next = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            window.history.replaceState({}, '', next);
+            const accounts = result.accounts || [];
+            setBankConnectionStatus(`Connected ${accounts.length} Belfius account(s).`);
+            return syncBankTransactions(false);
+        })
+        .catch(err => {
+            handleError(err);
+            return null;
+        });
+}
+
+const startBankConnection = () => {
+    const returnUrl = `${window.location.origin}${window.location.pathname}?bank_connect_return=1`;
+    setBankConnectionStatus('Opening Belfius consent...');
+    return betterFetch(`${url}/bank/connect/start?redirect_uri=${encodeURIComponent(returnUrl)}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) throw new Error(result.error);
+            if (!result.link || !result.flow_id) {
+                throw new Error('Bank connect response missing link.');
+            }
+            localStorage.setItem('pending_bank_flow_id', result.flow_id);
+            localStorage.setItem('pending_bank_provider', result.provider || '');
+            window.location.href = result.link;
+        })
+        .catch(handleError);
+}
+
+const setupBankAutoSync = () => {
+    if (BANK_SYNC_INTERVAL_ID) clearInterval(BANK_SYNC_INTERVAL_ID);
+    BANK_SYNC_INTERVAL_ID = setInterval(() => {
+        syncBankTransactions(true);
+    }, 5 * 60 * 1000);
+}
+
+const dismissPendingBankTransaction = (id) => {
+    betterFetch(`${url}/bank/dismiss_pending?id=${encodeURIComponent(id)}`)
+        .then(response => response.json())
+        .then(() => {
+            BANK_PENDING_TRANSACTIONS = BANK_PENDING_TRANSACTIONS.filter(tx => Number(tx.id) !== Number(id));
+            if (SELECTED_PENDING_BANK_TRANSACTION_ID === Number(id)) {
+                clearSelectedPendingBankTransaction();
+            }
+            renderPendingBankTransactions();
+        })
+        .catch(handleError);
+}
+
+const importBelfiusCsvFile = (file) => {
+    if (!file) return Promise.resolve();
+
+    const formData = new FormData();
+    formData.append('file', file);
+    showLoading('Importing Belfius CSV...');
+
+    return betterFetch(`${url}/bank/import_csv`, {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(result => {
+            BANK_PENDING_TRANSACTIONS = (result.pending || []).filter(tx => parseBudgetNumber(tx.amount) < 0);
+            renderPendingBankTransactions();
+            setBankImportStatus(`Imported ${result.imported || 0} new expenses (${result.duplicates || 0} duplicates ignored).`);
+        })
+        .catch(handleError)
+        .finally(() => {
+            hideLoading();
+        });
+}
+
+const setupBankImportUI = () => {
+    const btnConnect = document.getElementById('btn_connect_belfius');
+    const btnSync = document.getElementById('btn_sync_belfius');
+    const btnImport = document.getElementById('btn_import_belfius');
+    const inputFile = document.getElementById('inp_belfius_csv');
+    if (!btnImport || !inputFile || !btnConnect || !btnSync) return;
+
+    btnConnect.addEventListener('click', () => startBankConnection());
+    btnSync.addEventListener('click', () => {
+        showLoading('Syncing bank expenses...');
+        syncBankTransactions(false).finally(() => hideLoading());
+    });
+    btnImport.addEventListener('click', () => inputFile.click());
+    inputFile.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        importBelfiusCsvFile(file).finally(() => {
+            inputFile.value = '';
+        });
+    });
+
+    maybeConfirmBankConnectionFromReturn()
+        .finally(() => {
+            fetchBankConnections();
+            fetchPendingBankTransactions();
+            syncBankTransactions(true);
+            setupBankAutoSync();
+        });
+}
+
 
 const submit = () => {
     // send data to server
@@ -1388,8 +1702,20 @@ const submit = () => {
 
     const subcategory = null;
     const description = document.getElementById('inp_description').value;
+    const expenseDate = SELECTED_PENDING_BANK_TRANSACTION_DATE;
+    const pendingBankTransactionId = SELECTED_PENDING_BANK_TRANSACTION_ID;
 
-    const fullUrl = `${url}/add_expense?price_fabian=${price_fabian.toFixed(2)}&price_elisa=${price_elisa.toFixed(2)}&paid_by=${paidBy}&category=${category}&subcategory=${subcategory}&description=${description}`;
+    const params = new URLSearchParams();
+    params.set('price_fabian', price_fabian.toFixed(2));
+    params.set('price_elisa', price_elisa.toFixed(2));
+    params.set('paid_by', paidBy);
+    params.set('category', category);
+    params.set('subcategory', subcategory);
+    params.set('description', description);
+    if (expenseDate) params.set('date', expenseDate);
+    if (pendingBankTransactionId) params.set('pending_bank_transaction_id', String(pendingBankTransactionId));
+
+    const fullUrl = `${url}/add_expense?${params.toString()}`;
 
     // Cache when holidays are added so in future the category is by default 'Reizen'
     if (category === 'Reizen') {
@@ -1435,6 +1761,14 @@ const submit = () => {
             document.getElementById('inp_description').value = '';
             resetCategorySelection();
             holidayImmediatelyFillInCategory();
+            if (pendingBankTransactionId) {
+                BANK_PENDING_TRANSACTIONS = BANK_PENDING_TRANSACTIONS.filter(
+                    tx => Number(tx.id) !== Number(pendingBankTransactionId)
+                );
+                renderPendingBankTransactions();
+                setBankImportStatus(`Bank transaction #${pendingBankTransactionId} added as expense.`);
+            }
+            clearSelectedPendingBankTransaction();
         })
         .catch(e => {
             hideLoading();
@@ -1868,6 +2202,7 @@ const updateNavigationButtons = () => {
 
 setupExpensesSearch();
 setupCalculatorKeypad();
+setupBankImportUI();
 
 inp_price.addEventListener('input', () => {
     update();

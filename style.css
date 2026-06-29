@@ -709,3 +709,110 @@ body:not(.dashboard-body) input[type="range"] {
     gap: 8px;
     margin-top: 16px;
 }
+
+.button-secondary {
+    border: 1px solid #034286;
+    background: #f3f8ff;
+    color: #034286;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.95em;
+}
+
+.bank-actions-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bank-import-status {
+    margin-top: 6px;
+    font-size: 0.85em;
+    color: #5d5d5d;
+    text-align: left;
+}
+
+.bank-pending-panel {
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fafcfe;
+}
+
+.bank-pending-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.bank-pending-count {
+    background: #034286;
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+}
+
+.bank-pending-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.bank-pending-item {
+    border: 1px solid #e7edf5;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #ffffff;
+}
+
+.bank-pending-item:last-child {
+    margin-bottom: 0;
+}
+
+.bank-pending-main {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.bank-pending-merchant {
+    font-weight: 600;
+    color: #1f2a37;
+}
+
+.bank-pending-amount {
+    font-weight: 600;
+    color: #034286;
+}
+
+.bank-pending-meta {
+    margin-top: 4px;
+    font-size: 0.82em;
+    color: #6a7280;
+}
+
+.bank-pending-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.bank-pending-action {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border-radius: 6px;
+    font-size: 0.82em;
+    padding: 4px 8px;
+}
+
+.bank-pending-action.primary {
+    border-color: #034286;
+    color: #034286;
+}

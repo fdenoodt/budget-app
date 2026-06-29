@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=70">
+    <link rel="stylesheet" href="style.css?version=71">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -100,6 +100,23 @@
 
         <div id="div_submit" class="margin">
             <button name="btn_submit" id="btn_submit" onclick="submit()">Submit</button>
+        </div>
+        <div id="div_bank_import" class="margin">
+            <div class="bank-actions-row">
+                <button type="button" id="btn_connect_belfius" class="button-secondary">Connect Belfius</button>
+                <button type="button" id="btn_sync_belfius" class="button-secondary">Sync now</button>
+                <button type="button" id="btn_import_belfius" class="button-secondary">Import CSV</button>
+            </div>
+            <input type="file" id="inp_belfius_csv" accept=".csv,text/csv" hidden>
+            <div id="bank_connection_status" class="bank-import-status"></div>
+            <div id="bank_import_status" class="bank-import-status"></div>
+        </div>
+        <div id="bank_pending_panel" class="margin bank-pending-panel" aria-live="polite">
+            <div class="bank-pending-header">
+                <span>Pending bank expenses</span>
+                <span id="bank_pending_count" class="bank-pending-count">0</span>
+            </div>
+            <ul id="bank_pending_list" class="bank-pending-list"></ul>
         </div>
 
         <div id="profile_name" class="margin-side" style="text-align: left;">
@@ -241,7 +258,7 @@
         crossorigin="anonymous"></script>
 
 <script src="config.js"></script>
-<script src="script.js?version=65"></script>
+<script src="script.js?version=66"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
