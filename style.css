@@ -798,6 +798,12 @@ body:not(.dashboard-body) input[type="range"] {
     color: #6a7280;
 }
 
+.bank-pending-duplicates {
+    margin-top: 4px;
+    font-size: 0.82em;
+    color: #9a5b00;
+}
+
 .bank-pending-actions {
     margin-top: 8px;
     display: flex;

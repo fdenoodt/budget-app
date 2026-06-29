@@ -1458,6 +1458,15 @@ const renderPendingBankTransactions = () => {
         const merchant = tx.counterparty || 'Unknown merchant';
         const details = tx.remittance || '';
         const suggested = buildSuggestedDescriptionFromPending(tx);
+        const duplicateCandidates = tx.duplicate_candidates || [];
+        const duplicateHtml = duplicateCandidates.length ? `
+                <div class="bank-pending-duplicates">
+                    Possible duplicate: ${duplicateCandidates.map(expense => {
+                        const total = Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
+                        return `${escapeHtml(expense.description || expense.category || 'Expense')} · EUR ${total.toFixed(2)} · ${escapeHtml(formatDateForDisplay(expense.date || ''))}`;
+                    }).join(', ')}
+                </div>
+            ` : '';
         return `
             <li class="bank-pending-item" data-bank-id="${tx.id}">
                 <div class="bank-pending-main">
@@ -1466,8 +1475,10 @@ const renderPendingBankTransactions = () => {
                 </div>
                 <div class="bank-pending-meta">${escapeHtml(formatDateForDisplay(date))} ${details ? '&middot; ' + escapeHtml(details) : ''}</div>
                 <div class="bank-pending-meta">Suggestion: ${escapeHtml(suggested)}</div>
+                ${duplicateHtml}
                 <div class="bank-pending-actions">
                     <button type="button" class="bank-pending-action primary" data-action="use">Fill in app</button>
+                    ${duplicateCandidates.length ? '<button type="button" class="bank-pending-action" data-action="same">Same as manual</button>' : ''}
                     <button type="button" class="bank-pending-action" data-action="dismiss">Dismiss</button>
                 </div>
             </li>
@@ -1480,6 +1491,7 @@ const renderPendingBankTransactions = () => {
         if (!tx) return;
 
         const useBtn = item.querySelector('[data-action="use"]');
+        const sameBtn = item.querySelector('[data-action="same"]');
         const dismissBtn = item.querySelector('[data-action="dismiss"]');
 
         useBtn?.addEventListener('click', () => {
@@ -1498,6 +1510,11 @@ const renderPendingBankTransactions = () => {
             }
 
             setBankImportStatus(`Selected bank transaction #${tx.id}. Choose category/split and press Submit.`);
+        });
+
+        sameBtn?.addEventListener('click', () => {
+            dismissPendingBankTransaction(tx.id);
+            setBankImportStatus(`Marked bank transaction #${tx.id} as already entered manually.`);
         });
 
         dismissBtn?.addEventListener('click', () => {
@@ -1596,6 +1613,10 @@ const maybeConfirmBankConnectionFromReturn = () => {
 }
 
 const startBankConnection = () => {
+    if (window.BudgetAndroid) {
+        alert('Android notification setup: allow "Budget bank notifications" in system Notification access. Belfius/Revolut notifications will then appear here as pending expenses.');
+        return Promise.resolve();
+    }
     const returnUrl = `${window.location.origin}${window.location.pathname}?bank_connect_return=1`;
     setBankConnectionStatus('Opening Belfius consent...');
     return betterFetch(`${url}/bank/connect/start?redirect_uri=${encodeURIComponent(returnUrl)}`)
