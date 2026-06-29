@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=72">
+    <link rel="stylesheet" href="style.css?version=74">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -257,8 +257,8 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="config.js"></script>
-<script src="script.js?version=72"></script>
+<script src="config.js?version=74"></script>
+<script src="script.js?version=74"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -318,7 +318,7 @@
 <script>
     <!-- PWA -->
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
+        navigator.serviceWorker.register('service-worker.js?version=74')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
             })
