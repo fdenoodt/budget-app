@@ -1614,7 +1614,14 @@ const maybeConfirmBankConnectionFromReturn = () => {
 
 const startBankConnection = () => {
     if (window.BudgetAndroid) {
-        alert('Android notification setup: allow "Budget bank notifications" in system Notification access. Belfius/Revolut notifications will then appear here as pending expenses.');
+        window.BudgetAndroid.configure(
+            url || '',
+            'Basic ' + btoa(getKey() || ''),
+            getName ? getName() : ''
+        );
+        window.BudgetAndroid.refreshNotificationListener();
+        window.BudgetAndroid.openNotificationSettings();
+        setBankConnectionStatus('Opened Android notification access. Toggle Budget bank notifications off/on, then return and press Refresh.');
         return Promise.resolve();
     }
     const returnUrl = `${window.location.origin}${window.location.pathname}?bank_connect_return=1`;
