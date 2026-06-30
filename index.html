@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=76">
+    <link rel="stylesheet" href="style.css?version=77">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -46,7 +46,7 @@
 
         <div id="div_price" class="margin">
             <!-- round up to 2 decimals -->
-            <span>â‚¬</span> <input type="text" name="inp_price" id="inp_price" autofocus placeholder="0,00" inputmode="none"
+            <span>€</span> <input type="text" name="inp_price" id="inp_price" autofocus placeholder="0,00" inputmode="none"
                                   class="form-control">
         </div>
 
@@ -73,18 +73,18 @@
                 <!-- Basics -->
                 <select class="form-select" id="lst_categories_basics" style="width: 33%;"
                         onchange="chooseCategory(this)">
-                    <option selected disabled>ðŸŽ Basics</option>
+                    <option selected disabled>🍎 Basics</option>
                 </select>
 
                 <!-- Fun -->
                 <select class="form-select" id="lst_categories_fun" style="width: 33%" onchange="chooseCategory(this)">
-                    <option selected disabled>ðŸŽ‰ Fun</option>
+                    <option selected disabled>🎉 Fun</option>
                 </select>
 
                 <!-- Infrequent -->
                 <select class="form-select" id="lst_categories_infreq" style="width: 33%"
                         onchange="chooseCategory(this)">
-                    <option selected disabled>ðŸ“Ž Infreq</option>
+                    <option selected disabled>📎 Infreq</option>
                 </select>
             </div>
 
@@ -222,7 +222,7 @@
             <button type="button" class="calc-key" data-key="1">1</button>
             <button type="button" class="calc-key" data-key="2">2</button>
             <button type="button" class="calc-key" data-key="3">3</button>
-            <button type="button" class="calc-key calc-op" data-key="-">âˆ’</button>
+            <button type="button" class="calc-key calc-op" data-key="-">−</button>
 
             <button type="button" class="calc-key" data-key="4">4</button>
             <button type="button" class="calc-key" data-key="5">5</button>
@@ -233,7 +233,7 @@
             <button type="button" class="calc-key" data-key="8">8</button>
             <button type="button" class="calc-key" data-key="9">9</button>
             <button type="button" class="calc-key calc-action" data-action="delete" aria-label="Delete">
-                <span class="calc-del-icon" aria-hidden="true">âŒ«</span>
+                <span class="calc-del-icon" aria-hidden="true">⌫</span>
             </button>
 
             <button type="button" class="calc-key" data-key=",">,</button>
@@ -257,8 +257,8 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="config.js?version=76"></script>
-<script src="script.js?version=76"></script>
+<script src="config.js?version=77"></script>
+<script src="script.js?version=77"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -278,8 +278,8 @@
     // }
 
 
-    const categories_fun_keys = ['Restaurant', 'CafÃ© en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
-    const categories_fun_names = ['Restaurant', 'CafÃ© & Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
+    const categories_fun_keys = ['Restaurant', 'Café en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
+    const categories_fun_names = ['Restaurant', 'Café & Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst']
 
     const categories_infreq_keys = ['Abonnementen', 'Kleding', 'Schoenen', 'Kapper', 'Gifts', 'Reizen', 'Meubels en Interieur', 'Zelfontwikkeling', 'ICT', 'Maandelijks', 'Uitzonderlijk']
     const categories_infreq_names = ['Abonnementen', 'Kleding', 'Schoenen', 'Kapper', 'Gifts', 'Reizen', 'Meubels & Interieur', 'Zelfontwikkeling', 'ICT', 'Maandelijks', 'Uitzonderlijk']
@@ -318,7 +318,7 @@
 <script>
     <!-- PWA -->
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js?version=76')
+        navigator.serviceWorker.register('service-worker.js?version=77')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
             })

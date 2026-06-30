@@ -151,7 +151,7 @@ async function cachedGetJson(fullUrl, { ttl = DEFAULT_TTL, staleWhileRevalidate 
         setCache(fullUrl, json);
         return json;
     } catch (e) {
-        // network failed â€” fall back to cache if available (stale ok)
+        // network failed — fall back to cache if available (stale ok)
         if (cached && cached.v) {
             console.warn('Network failed, returning stale cache for', fullUrl);
             return cached.v;
@@ -178,7 +178,7 @@ function createCacheBadgeIfNeeded() {
     const badge = document.createElement('div');
     badge.id = 'cache-badge';
     badge.className = 'loading';
-    badge.innerHTML = `<span class="dot"></span><span id="cache-badge-text">Loadingâ€¦</span>`;
+    badge.innerHTML = `<span class="dot"></span><span id="cache-badge-text">Loading…</span>`;
     document.body.appendChild(badge);
 }
 
@@ -221,11 +221,11 @@ function createLoadingOverlayIfNeeded() {
 
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
-    overlay.innerHTML = `<div class="spinner" aria-hidden="true"></div><div id="loading-text">Updatingâ€¦</div>`;
+    overlay.innerHTML = `<div class="spinner" aria-hidden="true"></div><div id="loading-text">Updating…</div>`;
     document.body.appendChild(overlay);
 }
 
-function showLoading(text = 'Updatingâ€¦') {
+function showLoading(text = 'Updating…') {
     createLoadingOverlayIfNeeded();
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
@@ -382,10 +382,10 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
         // show cached badge with age
         const ageMs = Date.now() - cached.t;
         const ageMin = Math.round(ageMs / 60000);
-        setCacheBadge(`Cached â€¢ ${ageMin}m old`, 'stale');
+        setCacheBadge(`Cached • ${ageMin}m old`, 'stale');
     } else {
         // no cache: indicate we're loading
-        setCacheBadge('Loadingâ€¦', 'loading');
+        setCacheBadge('Loading…', 'loading');
     }
 
     // 2) Always attempt to fetch fresh data in background and update UI when ready
@@ -407,10 +407,10 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             return fresh;
         })
         .catch(e => {
-            // network failed; if we had cached data we already displayed it â€” now show offline badge
+            // network failed; if we had cached data we already displayed it — now show offline badge
             if (cached && cached.v) {
                 const ageMin = Math.round((Date.now() - cached.t) / 60000);
-                setCacheBadge(`Offline â€” showing cached ${ageMin}m`, 'offline');
+                setCacheBadge(`Offline — showing cached ${ageMin}m`, 'offline');
             } else {
                 setCacheBadge('Offline', 'offline');
             }
@@ -446,7 +446,7 @@ class LineGraphs {
         const newDiv = document.createElement('div');
         newDiv.style.fontSize = '0.8em';
         newDiv.innerHTML = `
-        Momenteel bevat je spaarvarken <span id="money_pig" style="color: #4BC0C0;">â‚¬${moneyPig.toFixed(0)}</span>. Geniet ervan!
+        Momenteel bevat je spaarvarken <span id="money_pig" style="color: #4BC0C0;">€${moneyPig.toFixed(0)}</span>. Geniet ervan!
         <br>
         (Berekend op basis van de volledige geschiedenis. De huidige maand is nog niet inbegrepen.)`;
 
@@ -462,7 +462,7 @@ class LineGraphs {
         const newDivInvestments = document.createElement('div');
         newDivInvestments.style.fontSize = '0.8em';
         newDivInvestments.innerHTML = `
-        In the last 12 months, you invested a total of <span id="investments" style="color: #4BC0C0;">â‚¬${totalInvestments.toFixed(0)}</span> (avg: â‚¬${avgInvestments.toFixed(0)}).
+        In the last 12 months, you invested a total of <span id="investments" style="color: #4BC0C0;">€${totalInvestments.toFixed(0)}</span> (avg: €${avgInvestments.toFixed(0)}).
         <br>
         (Only the last 12 months are considered. Current month is included).
         `;
@@ -554,9 +554,9 @@ class LineGraphs {
                                 const index = context.dataIndex;
                                 const pointLabel = dataset.pointLabels[index];
                                 return pointLabel ?
-                                    `${context.label}:  â‚¬${context.raw.toFixed(0)} (Total ðŸ–:  â‚¬${pointLabel.toFixed(0)})` // e.g. "Jan: 2800 (3000)"
+                                    `${context.label}:  €${context.raw.toFixed(0)} (Total 🐖:  €${pointLabel.toFixed(0)})` // e.g. "Jan: 2800 (3000)"
                                     :
-                                    `${context.label}:  â‚¬${context.raw.toFixed(0)}`;
+                                    `${context.label}:  €${context.raw.toFixed(0)}`;
                             }
                         }
                     }
@@ -804,9 +804,9 @@ const updateBar = (groupedExenses, indivualExpenses) => {
                                 .slice()
                                 .sort((a, b) => getExpensePrice(b) - getExpensePrice(a))
                                 .slice(0, 10)
-                                .map(exp => `${exp.description || ''}: â‚¬${getExpensePrice(exp).toFixed(2)}`);
+                                .map(exp => `${exp.description || ''}: €${getExpensePrice(exp).toFixed(2)}`);
 
-                            return [`Total: â‚¬${total}`, ...expenseDetails];
+                            return [`Total: €${total}`, ...expenseDetails];
                         }
                     },
                     // callback after the tooltip has been is closed
@@ -926,8 +926,8 @@ const updateBarExpensesLastNDays = (expenses) => {
                             const total = expenses.reduce((sum, exp) => sum + (getName() === FABIAN ? exp.price_fabian : exp.price_elisa), 0).toFixed(2);
                             const expenseDetails = expenses
                                 .sort((a, b) => (getName() === FABIAN ? b.price_fabian : b.price_elisa) - (getName() === FABIAN ? a.price_fabian : a.price_elisa))
-                                .map(exp => `${exp.description}: â‚¬${(getName() === FABIAN ? exp.price_fabian : exp.price_elisa).toFixed(2)}`);
-                            return [`Total: â‚¬${total}`, ...expenseDetails];
+                                .map(exp => `${exp.description}: €${(getName() === FABIAN ? exp.price_fabian : exp.price_elisa).toFixed(2)}`);
+                            return [`Total: €${total}`, ...expenseDetails];
                         }
                     },
                     // callback after the tooltip has been is closed
@@ -950,13 +950,13 @@ const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_add
     const safePig = target_pig_addition ?? 0;
     const div_budget_statistics = document.getElementById('div_budget_statistics');
     div_budget_statistics.innerHTML = `
-        ðŸ’²<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${safeIncome.toFixed(0)}</span> = 
-        ðŸž<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${safeCap.toFixed(0)}</span> + 
-        ðŸ <span data-toggle="tooltip" data-placement="top" title="Huur appartement">${safeRent.toFixed(0)}</span> + 
-        ðŸ’¸<span data-toggle="tooltip" data-placement="top" title="Bedrag te investeren. Berekent op inkomsten nadat target allowance en huur al afgetrokken zijn. 
+        💲<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${safeIncome.toFixed(0)}</span> = 
+        🍞<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${safeCap.toFixed(0)}</span> + 
+        🏠<span data-toggle="tooltip" data-placement="top" title="Huur appartement">${safeRent.toFixed(0)}</span> + 
+        💸<span data-toggle="tooltip" data-placement="top" title="Bedrag te investeren. Berekent op inkomsten nadat target allowance en huur al afgetrokken zijn. 
         Hiervan gaat ${Math.round((safeInvest / (safeInvest + safePig))) * 100}% naar investeren. De overige ${Math.round((1 - (safeInvest / (safeInvest + safePig))) * 100)}% gaat naar de het varkentje.
         Het investment bedrag is dus berekend op het inkomen en is onafhankelijk van hoeveel allowance je uiteindelijk uitgeeft.">${safeInvest.toFixed(0)}</span> + 
-        ðŸ·<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies â‚¬${safeCap.toFixed(0)} aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er â‚¬5 meer/minder naar het varkentje."> ${safePig.toFixed(0)}</span>
+        🐷<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies €${safeCap.toFixed(0)} aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er €5 meer/minder naar het varkentje."> ${safePig.toFixed(0)}</span>
     `;
 
     $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover click touchstart' }).on('mouseleave', function () {
@@ -986,9 +986,9 @@ const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
 
     const div_amsterdam_statistics = document.getElementById('div_amsterdam_statistics');
     div_amsterdam_statistics.innerHTML = `
-        ðŸž<span data-toggle="tooltip" data-placement="top" title="Consumables">${consumables.toFixed(0)}</span> +
-        ðŸš<span data-toggle="tooltip" data-placement="top" title="Public transport">${public_transport.toFixed(0)}</span> +
-        ðŸ <span data-toggle="tooltip" data-placement="top" title="Housing">${housing.toFixed(0)}</span>
+        🍞<span data-toggle="tooltip" data-placement="top" title="Consumables">${consumables.toFixed(0)}</span> +
+        🚌<span data-toggle="tooltip" data-placement="top" title="Public transport">${public_transport.toFixed(0)}</span> +
+        🏠<span data-toggle="tooltip" data-placement="top" title="Housing">${housing.toFixed(0)}</span>
         = ${(consumables + public_transport + housing).toFixed(0)} / 8448.00
     `;
 
@@ -1099,7 +1099,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const expenseTotal = expensesBasics + expensesFun + expensesInfreq;
     const fillPct = Math.min(expenseTotal / allowanceMax, 1);
 
-    const outerTotalMax = allowanceMax + moneyPigTotal; // 2800 â‚¬
+    const outerTotalMax = allowanceMax + moneyPigTotal; // 2800 €
     const usedOuter = fillPct * outerTotalMax;
 
     const [allowanceUsedDisp, allowanceRemainingDisp, moneyPigUsedDisp, moneyPigRemainingDisp]
@@ -1113,10 +1113,10 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
 
 
     const outerLabels = [
-        `Allowance used (â‚¬${allowanceUsed.toFixed(2)})`,
-        `Allowance left (â‚¬${allowanceRemaining.toFixed(2)})`,
-        `Money Pig used (â‚¬${moneyPigUsed.toFixed(2)})`,
-        `Money Pig left (â‚¬${moneyPigRemaining.toFixed(2)})`
+        `Allowance used (€${allowanceUsed.toFixed(2)})`,
+        `Allowance left (€${allowanceRemaining.toFixed(2)})`,
+        `Money Pig used (€${moneyPigUsed.toFixed(2)})`,
+        `Money Pig left (€${moneyPigRemaining.toFixed(2)})`
     ];
     const outerColors = [
         'rgba(31, 42, 68, 0.5)',       // used allowance
@@ -1132,11 +1132,11 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const innerData = [expensesBasicsPercent, expensesFunPercent, expensesInfreqPercent, leftOverAllowancePercent, leftOverPigPercent];
 
     const innerLabels = [
-        `ðŸŽ â‚¬${expensesBasics.toFixed(2)}`,
-        `ðŸŽ‰ â‚¬${expensesFun.toFixed(2)}`,
-        `ðŸ“Ž â‚¬${expensesInfreq.toFixed(2)}`,
-        `ðŸž â‚¬${(allowanceMax - allowanceRemaining).toFixed(0)} / ${allowanceMax.toFixed(0)}`,
-        `ðŸ– â‚¬${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
+        `🍎 €${expensesBasics.toFixed(2)}`,
+        `🎉 €${expensesFun.toFixed(2)}`,
+        `📎 €${expensesInfreq.toFixed(2)}`,
+        `🍞 €${(allowanceMax - allowanceRemaining).toFixed(0)} / ${allowanceMax.toFixed(0)}`,
+        `🐖 €${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
     ];
 
     const innerColors = [
@@ -1191,7 +1191,7 @@ const plotDonut = (statistics) => {
             const sum = data.slice(0, data.length - 2).reduce((a, b) => a + b, 0).toFixed(0);
             const ctxChart = chart.ctx;
             const chartArea = chart.chartArea;
-            const text = `â‚¬${sum}`;
+            const text = `€${sum}`;
 
             ctxChart.save();
             ctxChart.font = "1.5em Roboto";
@@ -1819,7 +1819,7 @@ const submit = () => {
             return updateDebtsAndExpensesAll();
         })
         .then(() => {
-            // done â€” hide overlay
+            // done — hide overlay
             hideLoading();
             // optionally clear the input fields
             inp_price.value = '';
@@ -2357,8 +2357,8 @@ const createEditModalIfNeeded = () => {
                     <input type="number" id="edit-expense-elisa-input" class="form-control" step="0.01">
                 </div>
                 <div class="edit-split-values">
-                    <span id="edit-expense-fabian">Fabian: â‚¬0.00</span>
-                    <span id="edit-expense-elisa">Elisa: â‚¬0.00</span>
+                    <span id="edit-expense-fabian">Fabian: €0.00</span>
+                    <span id="edit-expense-elisa">Elisa: €0.00</span>
                 </div>
             </div>
             <div class="edit-modal-actions">
@@ -2394,8 +2394,8 @@ const updateEditSplitPreview = () => {
     const fabian = signedTotal * (ratio / 100);
     const elisa = signedTotal - fabian;
 
-    fabianLabel.textContent = `Fabian: â‚¬${fabian.toFixed(2)}`;
-    elisaLabel.textContent = `Elisa: â‚¬${elisa.toFixed(2)}`;
+    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
     fabianInput.value = Math.abs(fabian).toFixed(2);
     elisaInput.value = Math.abs(elisa).toFixed(2);
 };
@@ -2422,8 +2422,8 @@ const updateEditSplitFromInputs = () => {
     const signedTotal = categorySelect.value === 'Inkomst' ? -Math.abs(totalVal) : Math.abs(totalVal);
     const fabian = signedTotal * (ratio / 100);
     const elisa = signedTotal - fabian;
-    fabianLabel.textContent = `Fabian: â‚¬${fabian.toFixed(2)}`;
-    elisaLabel.textContent = `Elisa: â‚¬${elisa.toFixed(2)}`;
+    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
 };
 
 const openEditExpenseById = (id) => {

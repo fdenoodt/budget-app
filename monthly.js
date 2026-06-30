@@ -33,7 +33,7 @@ function betterFetch(fullUrl, options = {}) {
 }
 
 const categories_basics_keys = ['Boodschappen', 'Bakker', 'Gezondheid en verzorging', 'Transport', 'Auto', 'TUe'];
-const categories_fun_keys = ['Restaurant', 'CafAc en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst'];
+const categories_fun_keys = ['Restaurant', 'Café en Drinks', 'Amusement', 'Sport', 'Shopping', 'Inkomst'];
 const categories_infreq_keys = ['Abonnementen', 'Kleding', 'Schoenen', 'Kapper', 'Gifts', 'Reizen', 'Meubels en Interieur', 'Zelfontwikkeling', 'ICT', 'Maandelijks', 'Uitzonderlijk'];
 
 const allCategories = Array.from(new Set([
