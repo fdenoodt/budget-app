@@ -1,4 +1,4 @@
-const url = config.url;
+﻿const url = config.url;
 const key = authenticate()
 
 const inp_price = document.getElementById('inp_price');
@@ -151,7 +151,7 @@ async function cachedGetJson(fullUrl, { ttl = DEFAULT_TTL, staleWhileRevalidate 
         setCache(fullUrl, json);
         return json;
     } catch (e) {
-        // network failed — fall back to cache if available (stale ok)
+        // network failed â€” fall back to cache if available (stale ok)
         if (cached && cached.v) {
             console.warn('Network failed, returning stale cache for', fullUrl);
             return cached.v;
@@ -178,7 +178,7 @@ function createCacheBadgeIfNeeded() {
     const badge = document.createElement('div');
     badge.id = 'cache-badge';
     badge.className = 'loading';
-    badge.innerHTML = `<span class="dot"></span><span id="cache-badge-text">Loading…</span>`;
+    badge.innerHTML = `<span class="dot"></span><span id="cache-badge-text">Loadingâ€¦</span>`;
     document.body.appendChild(badge);
 }
 
@@ -221,11 +221,11 @@ function createLoadingOverlayIfNeeded() {
 
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
-    overlay.innerHTML = `<div class="spinner" aria-hidden="true"></div><div id="loading-text">Updating…</div>`;
+    overlay.innerHTML = `<div class="spinner" aria-hidden="true"></div><div id="loading-text">Updatingâ€¦</div>`;
     document.body.appendChild(overlay);
 }
 
-function showLoading(text = 'Updating…') {
+function showLoading(text = 'Updatingâ€¦') {
     createLoadingOverlayIfNeeded();
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
@@ -364,6 +364,9 @@ function renderData(data) {
 
     ALL_EXPENSES = expenses;
     applyExpensesSearch(EXPENSES_SEARCH_QUERY);
+    if (isAndroidPendingEnabled()) {
+        fetchPendingBankTransactions();
+    }
 }
 
 const updateDebtsAndExpensesAll = (maxTrials = 3) => {
@@ -379,10 +382,10 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
         // show cached badge with age
         const ageMs = Date.now() - cached.t;
         const ageMin = Math.round(ageMs / 60000);
-        setCacheBadge(`Cached • ${ageMin}m old`, 'stale');
+        setCacheBadge(`Cached â€¢ ${ageMin}m old`, 'stale');
     } else {
         // no cache: indicate we're loading
-        setCacheBadge('Loading…', 'loading');
+        setCacheBadge('Loadingâ€¦', 'loading');
     }
 
     // 2) Always attempt to fetch fresh data in background and update UI when ready
@@ -404,10 +407,10 @@ const updateDebtsAndExpensesAll = (maxTrials = 3) => {
             return fresh;
         })
         .catch(e => {
-            // network failed; if we had cached data we already displayed it — now show offline badge
+            // network failed; if we had cached data we already displayed it â€” now show offline badge
             if (cached && cached.v) {
                 const ageMin = Math.round((Date.now() - cached.t) / 60000);
-                setCacheBadge(`Offline — showing cached ${ageMin}m`, 'offline');
+                setCacheBadge(`Offline â€” showing cached ${ageMin}m`, 'offline');
             } else {
                 setCacheBadge('Offline', 'offline');
             }
@@ -443,7 +446,7 @@ class LineGraphs {
         const newDiv = document.createElement('div');
         newDiv.style.fontSize = '0.8em';
         newDiv.innerHTML = `
-        Momenteel bevat je spaarvarken <span id="money_pig" style="color: #4BC0C0;">€${moneyPig.toFixed(0)}</span>. Geniet ervan!
+        Momenteel bevat je spaarvarken <span id="money_pig" style="color: #4BC0C0;">â‚¬${moneyPig.toFixed(0)}</span>. Geniet ervan!
         <br>
         (Berekend op basis van de volledige geschiedenis. De huidige maand is nog niet inbegrepen.)`;
 
@@ -459,7 +462,7 @@ class LineGraphs {
         const newDivInvestments = document.createElement('div');
         newDivInvestments.style.fontSize = '0.8em';
         newDivInvestments.innerHTML = `
-        In the last 12 months, you invested a total of <span id="investments" style="color: #4BC0C0;">€${totalInvestments.toFixed(0)}</span> (avg: €${avgInvestments.toFixed(0)}).
+        In the last 12 months, you invested a total of <span id="investments" style="color: #4BC0C0;">â‚¬${totalInvestments.toFixed(0)}</span> (avg: â‚¬${avgInvestments.toFixed(0)}).
         <br>
         (Only the last 12 months are considered. Current month is included).
         `;
@@ -551,9 +554,9 @@ class LineGraphs {
                                 const index = context.dataIndex;
                                 const pointLabel = dataset.pointLabels[index];
                                 return pointLabel ?
-                                    `${context.label}:  €${context.raw.toFixed(0)} (Total 🐖:  €${pointLabel.toFixed(0)})` // e.g. "Jan: 2800 (3000)"
+                                    `${context.label}:  â‚¬${context.raw.toFixed(0)} (Total ðŸ–:  â‚¬${pointLabel.toFixed(0)})` // e.g. "Jan: 2800 (3000)"
                                     :
-                                    `${context.label}:  €${context.raw.toFixed(0)}`;
+                                    `${context.label}:  â‚¬${context.raw.toFixed(0)}`;
                             }
                         }
                     }
@@ -801,9 +804,9 @@ const updateBar = (groupedExenses, indivualExpenses) => {
                                 .slice()
                                 .sort((a, b) => getExpensePrice(b) - getExpensePrice(a))
                                 .slice(0, 10)
-                                .map(exp => `${exp.description || ''}: €${getExpensePrice(exp).toFixed(2)}`);
+                                .map(exp => `${exp.description || ''}: â‚¬${getExpensePrice(exp).toFixed(2)}`);
 
-                            return [`Total: €${total}`, ...expenseDetails];
+                            return [`Total: â‚¬${total}`, ...expenseDetails];
                         }
                     },
                     // callback after the tooltip has been is closed
@@ -923,8 +926,8 @@ const updateBarExpensesLastNDays = (expenses) => {
                             const total = expenses.reduce((sum, exp) => sum + (getName() === FABIAN ? exp.price_fabian : exp.price_elisa), 0).toFixed(2);
                             const expenseDetails = expenses
                                 .sort((a, b) => (getName() === FABIAN ? b.price_fabian : b.price_elisa) - (getName() === FABIAN ? a.price_fabian : a.price_elisa))
-                                .map(exp => `${exp.description}: €${(getName() === FABIAN ? exp.price_fabian : exp.price_elisa).toFixed(2)}`);
-                            return [`Total: €${total}`, ...expenseDetails];
+                                .map(exp => `${exp.description}: â‚¬${(getName() === FABIAN ? exp.price_fabian : exp.price_elisa).toFixed(2)}`);
+                            return [`Total: â‚¬${total}`, ...expenseDetails];
                         }
                     },
                     // callback after the tooltip has been is closed
@@ -947,13 +950,13 @@ const updateMonthlyBudgetStatistics = (income, cap, rent, invest, target_pig_add
     const safePig = target_pig_addition ?? 0;
     const div_budget_statistics = document.getElementById('div_budget_statistics');
     div_budget_statistics.innerHTML = `
-        💲<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${safeIncome.toFixed(0)}</span> = 
-        🍞<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${safeCap.toFixed(0)}</span> + 
-        🏠<span data-toggle="tooltip" data-placement="top" title="Huur appartement">${safeRent.toFixed(0)}</span> + 
-        💸<span data-toggle="tooltip" data-placement="top" title="Bedrag te investeren. Berekent op inkomsten nadat target allowance en huur al afgetrokken zijn. 
+        ðŸ’²<span data-toggle="tooltip" data-placement="top" title="Netto inkomen">${safeIncome.toFixed(0)}</span> = 
+        ðŸž<span data-toggle="tooltip" data-placement="top" title="Allowance voor maandelijkse kosten">${safeCap.toFixed(0)}</span> + 
+        ðŸ <span data-toggle="tooltip" data-placement="top" title="Huur appartement">${safeRent.toFixed(0)}</span> + 
+        ðŸ’¸<span data-toggle="tooltip" data-placement="top" title="Bedrag te investeren. Berekent op inkomsten nadat target allowance en huur al afgetrokken zijn. 
         Hiervan gaat ${Math.round((safeInvest / (safeInvest + safePig))) * 100}% naar investeren. De overige ${Math.round((1 - (safeInvest / (safeInvest + safePig))) * 100)}% gaat naar de het varkentje.
         Het investment bedrag is dus berekend op het inkomen en is onafhankelijk van hoeveel allowance je uiteindelijk uitgeeft.">${safeInvest.toFixed(0)}</span> + 
-        🐷<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies €${safeCap.toFixed(0)} aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er €5 meer/minder naar het varkentje."> ${safePig.toFixed(0)}</span>
+        ðŸ·<span data-toggle="tooltip" data-placement="top" title="Dit exacte bedrag zal volgende maand naar je varkentje gaan wanneer je deze maand precies â‚¬${safeCap.toFixed(0)} aan allowance uitgeeft. Besteed je deze maand bv 5 eur meer of minder, dan gaat er â‚¬5 meer/minder naar het varkentje."> ${safePig.toFixed(0)}</span>
     `;
 
     $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover click touchstart' }).on('mouseleave', function () {
@@ -983,9 +986,9 @@ const updateAmsterdamStatistics = (amsterdamGroupedExpenses) => {
 
     const div_amsterdam_statistics = document.getElementById('div_amsterdam_statistics');
     div_amsterdam_statistics.innerHTML = `
-        🍞<span data-toggle="tooltip" data-placement="top" title="Consumables">${consumables.toFixed(0)}</span> +
-        🚍<span data-toggle="tooltip" data-placement="top" title="Public transport">${public_transport.toFixed(0)}</span> +
-        🏠<span data-toggle="tooltip" data-placement="top" title="Housing">${housing.toFixed(0)}</span>
+        ðŸž<span data-toggle="tooltip" data-placement="top" title="Consumables">${consumables.toFixed(0)}</span> +
+        ðŸš<span data-toggle="tooltip" data-placement="top" title="Public transport">${public_transport.toFixed(0)}</span> +
+        ðŸ <span data-toggle="tooltip" data-placement="top" title="Housing">${housing.toFixed(0)}</span>
         = ${(consumables + public_transport + housing).toFixed(0)} / 8448.00
     `;
 
@@ -1096,7 +1099,7 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const expenseTotal = expensesBasics + expensesFun + expensesInfreq;
     const fillPct = Math.min(expenseTotal / allowanceMax, 1);
 
-    const outerTotalMax = allowanceMax + moneyPigTotal; // 2800 €
+    const outerTotalMax = allowanceMax + moneyPigTotal; // 2800 â‚¬
     const usedOuter = fillPct * outerTotalMax;
 
     const [allowanceUsedDisp, allowanceRemainingDisp, moneyPigUsedDisp, moneyPigRemainingDisp]
@@ -1110,10 +1113,10 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
 
 
     const outerLabels = [
-        `Allowance used (€${allowanceUsed.toFixed(2)})`,
-        `Allowance left (€${allowanceRemaining.toFixed(2)})`,
-        `Money Pig used (€${moneyPigUsed.toFixed(2)})`,
-        `Money Pig left (€${moneyPigRemaining.toFixed(2)})`
+        `Allowance used (â‚¬${allowanceUsed.toFixed(2)})`,
+        `Allowance left (â‚¬${allowanceRemaining.toFixed(2)})`,
+        `Money Pig used (â‚¬${moneyPigUsed.toFixed(2)})`,
+        `Money Pig left (â‚¬${moneyPigRemaining.toFixed(2)})`
     ];
     const outerColors = [
         'rgba(31, 42, 68, 0.5)',       // used allowance
@@ -1129,11 +1132,11 @@ const updateDonut = (groupedExenses, moneyPigTotal, toPutAssideMoneyPig, toInves
     const innerData = [expensesBasicsPercent, expensesFunPercent, expensesInfreqPercent, leftOverAllowancePercent, leftOverPigPercent];
 
     const innerLabels = [
-        `🍎 €${expensesBasics.toFixed(2)}`,
-        `🎉 €${expensesFun.toFixed(2)}`,
-        `📎 €${expensesInfreq.toFixed(2)}`,
-        `🍞 €${(allowanceMax - allowanceRemaining).toFixed(0)} / ${allowanceMax.toFixed(0)}`,
-        `🐖 €${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
+        `ðŸŽ â‚¬${expensesBasics.toFixed(2)}`,
+        `ðŸŽ‰ â‚¬${expensesFun.toFixed(2)}`,
+        `ðŸ“Ž â‚¬${expensesInfreq.toFixed(2)}`,
+        `ðŸž â‚¬${(allowanceMax - allowanceRemaining).toFixed(0)} / ${allowanceMax.toFixed(0)}`,
+        `ðŸ– â‚¬${moneyPigTotal.toFixed(0) - moneyPigRemaining.toFixed(0)} / ${moneyPigTotal.toFixed(0)}`
     ];
 
     const innerColors = [
@@ -1188,7 +1191,7 @@ const plotDonut = (statistics) => {
             const sum = data.slice(0, data.length - 2).reduce((a, b) => a + b, 0).toFixed(0);
             const ctxChart = chart.ctx;
             const chartArea = chart.chartArea;
-            const text = `€${sum}`;
+            const text = `â‚¬${sum}`;
 
             ctxChart.save();
             ctxChart.font = "1.5em Roboto";
@@ -1441,24 +1444,52 @@ const clearSelectedPendingBankTransaction = () => {
     SELECTED_PENDING_BANK_TRANSACTION_DATE = null;
 }
 
+const isAndroidPendingEnabled = () => !!window.BudgetAndroid;
+
+const getExpenseTotal = (expense) => Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
+
+const getRecentDuplicateCandidates = (tx) => {
+    if (!ALL_EXPENSES) return [];
+    const amount = Math.abs(parseBudgetNumber(tx.amount));
+    const txDate = tx.booked_date || tx.value_date || null;
+    const minDate = new Date();
+    minDate.setMonth(minDate.getMonth() - 1);
+
+    return ALL_EXPENSES
+        .filter(expense => {
+            if (!expense.date) return false;
+            const expenseDate = new Date(expense.date);
+            if (Number.isNaN(expenseDate.getTime()) || expenseDate < minDate) return false;
+            if (txDate) {
+                const detectedDate = new Date(txDate);
+                const daysDiff = Math.abs(expenseDate - detectedDate) / (1000 * 60 * 60 * 24);
+                if (daysDiff > 3) return false;
+            }
+            return Math.abs(getExpenseTotal(expense) - amount) < 0.01;
+        })
+        .slice(0, 3);
+}
+
 const renderPendingBankTransactions = () => {
     const listEl = document.getElementById('bank_pending_list');
     const countEl = document.getElementById('bank_pending_count');
+    const panelEl = document.getElementById('bank_pending_panel');
     if (!listEl || !countEl) return;
 
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
-        listEl.innerHTML = '<li class="bank-pending-item bank-pending-meta">No pending bank expenses.</li>';
+        if (panelEl) panelEl.style.display = 'none';
+        listEl.innerHTML = '';
         return;
     }
+    if (panelEl) panelEl.style.display = '';
 
     listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(tx => {
         const absAmount = Math.abs(parseBudgetNumber(tx.amount));
         const date = tx.booked_date || tx.value_date || '';
-        const merchant = tx.counterparty || 'Unknown merchant';
+        const merchant = tx.counterparty || tx.source || 'Payment';
         const details = tx.remittance || '';
-        const suggested = buildSuggestedDescriptionFromPending(tx);
-        const duplicateCandidates = tx.duplicate_candidates || [];
+        const duplicateCandidates = tx.duplicate_candidates || getRecentDuplicateCandidates(tx);
         const duplicateHtml = duplicateCandidates.length ? `
                 <div class="bank-pending-duplicates">
                     Possible duplicate: ${duplicateCandidates.map(expense => {
@@ -1468,17 +1499,15 @@ const renderPendingBankTransactions = () => {
                 </div>
             ` : '';
         return `
-            <li class="bank-pending-item" data-bank-id="${tx.id}">
+            <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx.id))}">
                 <div class="bank-pending-main">
                     <span class="bank-pending-merchant">${escapeHtml(merchant)}</span>
                     <span class="bank-pending-amount">EUR ${absAmount.toFixed(2)}</span>
                 </div>
                 <div class="bank-pending-meta">${escapeHtml(formatDateForDisplay(date))} ${details ? '&middot; ' + escapeHtml(details) : ''}</div>
-                <div class="bank-pending-meta">Suggestion: ${escapeHtml(suggested)}</div>
                 ${duplicateHtml}
                 <div class="bank-pending-actions">
                     <button type="button" class="bank-pending-action primary" data-action="use">Fill in app</button>
-                    ${duplicateCandidates.length ? '<button type="button" class="bank-pending-action" data-action="same">Same as manual</button>' : ''}
                     <button type="button" class="bank-pending-action" data-action="dismiss">Dismiss</button>
                 </div>
             </li>
@@ -1486,53 +1515,48 @@ const renderPendingBankTransactions = () => {
     }).join('');
 
     listEl.querySelectorAll('.bank-pending-item').forEach(item => {
-        const id = Number(item.dataset.bankId);
-        const tx = BANK_PENDING_TRANSACTIONS.find(t => Number(t.id) === id);
+        const id = item.dataset.bankId;
+        const tx = BANK_PENDING_TRANSACTIONS.find(t => String(t.id) === String(id));
         if (!tx) return;
 
-        const useBtn = item.querySelector('[data-action="use"]');
-        const sameBtn = item.querySelector('[data-action="same"]');
-        const dismissBtn = item.querySelector('[data-action="dismiss"]');
-
-        useBtn?.addEventListener('click', () => {
-            SELECTED_PENDING_BANK_TRANSACTION_ID = Number(tx.id);
+        item.querySelector('[data-action="use"]')?.addEventListener('click', () => {
+            SELECTED_PENDING_BANK_TRANSACTION_ID = tx.id;
             SELECTED_PENDING_BANK_TRANSACTION_DATE = tx.booked_date || tx.value_date || null;
 
-            const amount = Math.abs(parseBudgetNumber(tx.amount));
-            inp_price.value = formatBudgetNumber(amount);
+            inp_price.value = formatBudgetNumber(Math.abs(parseBudgetNumber(tx.amount)));
             update();
             checkSubmit();
 
             const descriptionInput = document.getElementById('inp_description');
             if (descriptionInput) {
-                descriptionInput.value = buildSuggestedDescriptionFromPending(tx);
+                descriptionInput.value = '';
                 descriptionInput.focus();
             }
-
-            setBankImportStatus(`Selected bank transaction #${tx.id}. Choose category/split and press Submit.`);
         });
 
-        sameBtn?.addEventListener('click', () => {
-            dismissPendingBankTransaction(tx.id);
-            setBankImportStatus(`Marked bank transaction #${tx.id} as already entered manually.`);
-        });
-
-        dismissBtn?.addEventListener('click', () => {
+        item.querySelector('[data-action="dismiss"]')?.addEventListener('click', () => {
             dismissPendingBankTransaction(tx.id);
         });
     });
 }
 
 const fetchPendingBankTransactions = () => {
-    return betterFetch(`${url}/bank/pending`)
-        .then(response => response.json())
-        .then(result => {
-            BANK_PENDING_TRANSACTIONS = (result.pending || []).filter(tx => parseBudgetNumber(tx.amount) < 0);
-            renderPendingBankTransactions();
-        })
-        .catch(handleError);
-}
+    if (isAndroidPendingEnabled()) {
+        try {
+            BANK_PENDING_TRANSACTIONS = JSON.parse(window.BudgetAndroid.getPendingExpenses() || '[]')
+                .filter(tx => parseBudgetNumber(tx.amount) < 0);
+        } catch (error) {
+            console.error(error);
+            BANK_PENDING_TRANSACTIONS = [];
+        }
+        renderPendingBankTransactions();
+        return Promise.resolve(BANK_PENDING_TRANSACTIONS);
+    }
 
+    BANK_PENDING_TRANSACTIONS = [];
+    renderPendingBankTransactions();
+    return Promise.resolve([]);
+}
 const fetchBankConnections = () => {
     return betterFetch(`${url}/bank/connections`)
         .then(response => response.json())
@@ -1648,6 +1672,16 @@ const setupBankAutoSync = () => {
 }
 
 const dismissPendingBankTransaction = (id) => {
+    if (isAndroidPendingEnabled()) {
+        window.BudgetAndroid.dismissPendingExpense(String(id));
+        BANK_PENDING_TRANSACTIONS = BANK_PENDING_TRANSACTIONS.filter(tx => String(tx.id) !== String(id));
+        if (String(SELECTED_PENDING_BANK_TRANSACTION_ID) === String(id)) {
+            clearSelectedPendingBankTransaction();
+        }
+        renderPendingBankTransactions();
+        return;
+    }
+
     betterFetch(`${url}/bank/dismiss_pending?id=${encodeURIComponent(id)}`)
         .then(response => response.json())
         .then(() => {
@@ -1684,6 +1718,9 @@ const importBelfiusCsvFile = (file) => {
 }
 
 const setupBankImportUI = () => {
+    fetchPendingBankTransactions();
+    return;
+
     const btnConnect = document.getElementById('btn_connect_belfius');
     const btnSync = document.getElementById('btn_sync_belfius');
     const btnImport = document.getElementById('btn_import_belfius');
@@ -1741,7 +1778,9 @@ const submit = () => {
     params.set('subcategory', subcategory);
     params.set('description', description);
     if (expenseDate) params.set('date', expenseDate);
-    if (pendingBankTransactionId) params.set('pending_bank_transaction_id', String(pendingBankTransactionId));
+    if (pendingBankTransactionId && !isAndroidPendingEnabled()) {
+        params.set('pending_bank_transaction_id', String(pendingBankTransactionId));
+    }
 
     const fullUrl = `${url}/add_expense?${params.toString()}`;
 
@@ -1780,7 +1819,7 @@ const submit = () => {
             return updateDebtsAndExpensesAll();
         })
         .then(() => {
-            // done — hide overlay
+            // done â€” hide overlay
             hideLoading();
             // optionally clear the input fields
             inp_price.value = '';
@@ -1790,11 +1829,7 @@ const submit = () => {
             resetCategorySelection();
             holidayImmediatelyFillInCategory();
             if (pendingBankTransactionId) {
-                BANK_PENDING_TRANSACTIONS = BANK_PENDING_TRANSACTIONS.filter(
-                    tx => Number(tx.id) !== Number(pendingBankTransactionId)
-                );
-                renderPendingBankTransactions();
-                setBankImportStatus(`Bank transaction #${pendingBankTransactionId} added as expense.`);
+                dismissPendingBankTransaction(pendingBankTransactionId);
             }
             clearSelectedPendingBankTransaction();
         })
@@ -2322,8 +2357,8 @@ const createEditModalIfNeeded = () => {
                     <input type="number" id="edit-expense-elisa-input" class="form-control" step="0.01">
                 </div>
                 <div class="edit-split-values">
-                    <span id="edit-expense-fabian">Fabian: €0.00</span>
-                    <span id="edit-expense-elisa">Elisa: €0.00</span>
+                    <span id="edit-expense-fabian">Fabian: â‚¬0.00</span>
+                    <span id="edit-expense-elisa">Elisa: â‚¬0.00</span>
                 </div>
             </div>
             <div class="edit-modal-actions">
@@ -2359,8 +2394,8 @@ const updateEditSplitPreview = () => {
     const fabian = signedTotal * (ratio / 100);
     const elisa = signedTotal - fabian;
 
-    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
-    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
+    fabianLabel.textContent = `Fabian: â‚¬${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: â‚¬${elisa.toFixed(2)}`;
     fabianInput.value = Math.abs(fabian).toFixed(2);
     elisaInput.value = Math.abs(elisa).toFixed(2);
 };
@@ -2387,8 +2422,8 @@ const updateEditSplitFromInputs = () => {
     const signedTotal = categorySelect.value === 'Inkomst' ? -Math.abs(totalVal) : Math.abs(totalVal);
     const fabian = signedTotal * (ratio / 100);
     const elisa = signedTotal - fabian;
-    fabianLabel.textContent = `Fabian: €${fabian.toFixed(2)}`;
-    elisaLabel.textContent = `Elisa: €${elisa.toFixed(2)}`;
+    fabianLabel.textContent = `Fabian: â‚¬${fabian.toFixed(2)}`;
+    elisaLabel.textContent = `Elisa: â‚¬${elisa.toFixed(2)}`;
 };
 
 const openEditExpenseById = (id) => {
@@ -2623,6 +2658,8 @@ class ExpenseListItem {
 
 
 }
+
+
 
 
 

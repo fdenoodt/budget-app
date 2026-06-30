@@ -12,6 +12,10 @@ body:not(.dashboard-body) {
     background: radial-gradient(circle at top left, #fff2cc 0%, #f8f9ff 45%, #ffffff 100%);
 }
 
+.is-hidden {
+    display: none !important;
+}
+
 #main {
     text-align: center;
     /* margin-top: 5em; */
@@ -820,5 +824,6 @@ body:not(.dashboard-body) input[type="range"] {
 
 .bank-pending-action.primary {
     border-color: #034286;
-    color: #034286;
+    background: #034286;
+    color: #ffffff;
 }
