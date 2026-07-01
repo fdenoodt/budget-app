@@ -1550,13 +1550,63 @@ const getRecentDuplicateCandidates = (tx) => {
         .slice(0, 3);
 }
 
+const normalizePendingBankTransaction = (tx, index) => {
+    const fallbackId = `pending-${index}`;
+    return {
+        ...tx,
+        id: tx?.id ?? fallbackId,
+        amount: parseBudgetNumber(tx?.amount),
+        booked_date: tx?.booked_date || tx?.value_date || '',
+        counterparty: tx?.counterparty || tx?.source || 'Payment',
+        remittance: tx?.remittance || tx?.raw_text || ''
+    };
+}
+
+const renderPendingBankTransactionRow = (rawTx, index) => {
+    const tx = normalizePendingBankTransaction(rawTx, index);
+    const absAmount = Math.abs(parseBudgetNumber(tx.amount));
+    const date = tx.booked_date || tx.value_date || '';
+    const merchant = tx.counterparty || tx.source || 'Payment';
+    const details = tx.remittance || '';
+    const duplicateCandidates = Array.isArray(tx.duplicate_candidates)
+        ? tx.duplicate_candidates
+        : getRecentDuplicateCandidates(tx);
+    const duplicateHtml = duplicateCandidates.length ? `
+            <div class="bank-pending-duplicates">
+                Possible duplicate: ${duplicateCandidates.map(expense => {
+                    const total = Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
+                    return `${escapeHtml(expense.description || expense.category || 'Expense')} · EUR ${total.toFixed(2)} · ${escapeHtml(formatDateForDisplay(expense.date || ''))}`;
+                }).join(', ')}
+            </div>
+        ` : '';
+    return `
+        <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx.id))}" tabindex="0">
+            <div class="bank-pending-main">
+                <span class="bank-pending-merchant">${escapeHtml(merchant)}</span>
+                <span class="bank-pending-amount">EUR ${absAmount.toFixed(2)}</span>
+            </div>
+            <div class="bank-pending-meta">${escapeHtml(formatDateForDisplay(date))} ${details ? '&middot; ' + escapeHtml(details) : ''}</div>
+            ${duplicateHtml}
+            <div class="bank-pending-actions">
+                <button type="button" class="bank-pending-action primary" data-action="use">Fill in app</button>
+                <button type="button" class="bank-pending-action" data-action="dismiss">Dismiss</button>
+            </div>
+        </li>
+    `;
+}
+
 const renderPendingBankTransactions = () => {
     const listEl = document.getElementById('bank_pending_list');
     const countEl = document.getElementById('bank_pending_count');
     const panelEl = document.getElementById('bank_pending_panel');
+    const debugEl = document.getElementById('bank_pending_debug');
     if (!listEl || !countEl) return;
 
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
+    if (debugEl) {
+        const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
+        debugEl.textContent = `web 80 · app ${androidVersion}`;
+    }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
         listEl.innerHTML = '';
@@ -1566,36 +1616,22 @@ const renderPendingBankTransactions = () => {
         panelEl.style.display = '';
         panelEl.classList.remove('is-collapsed');
     }
+    listEl.style.display = 'block';
 
-    listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(tx => {
-        const absAmount = Math.abs(parseBudgetNumber(tx.amount));
-        const date = tx.booked_date || tx.value_date || '';
-        const merchant = tx.counterparty || tx.source || 'Payment';
-        const details = tx.remittance || '';
-        const duplicateCandidates = tx.duplicate_candidates || getRecentDuplicateCandidates(tx);
-        const duplicateHtml = duplicateCandidates.length ? `
-                <div class="bank-pending-duplicates">
-                    Possible duplicate: ${duplicateCandidates.map(expense => {
-                        const total = Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
-                        return `${escapeHtml(expense.description || expense.category || 'Expense')} · EUR ${total.toFixed(2)} · ${escapeHtml(formatDateForDisplay(expense.date || ''))}`;
-                    }).join(', ')}
-                </div>
-            ` : '';
-        return `
-            <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx.id))}" tabindex="0">
+    try {
+        listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(renderPendingBankTransactionRow).join('');
+    } catch (error) {
+        console.error('Failed to render pending bank expenses', error, BANK_PENDING_TRANSACTIONS);
+        listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map((tx, index) => `
+            <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx?.id ?? index))}" tabindex="0">
                 <div class="bank-pending-main">
-                    <span class="bank-pending-merchant">${escapeHtml(merchant)}</span>
-                    <span class="bank-pending-amount">EUR ${absAmount.toFixed(2)}</span>
+                    <span class="bank-pending-merchant">Payment</span>
+                    <span class="bank-pending-amount">EUR ${Math.abs(parseBudgetNumber(tx?.amount)).toFixed(2)}</span>
                 </div>
-                <div class="bank-pending-meta">${escapeHtml(formatDateForDisplay(date))} ${details ? '&middot; ' + escapeHtml(details) : ''}</div>
-                ${duplicateHtml}
-                <div class="bank-pending-actions">
-                    <button type="button" class="bank-pending-action primary" data-action="use">Fill in app</button>
-                    <button type="button" class="bank-pending-action" data-action="dismiss">Dismiss</button>
-                </div>
+                <div class="bank-pending-meta">${escapeHtml(tx?.remittance || tx?.raw_text || 'Tap to fill this expense')}</div>
             </li>
-        `;
-    }).join('');
+        `).join('');
+    }
 
     markSelectedPendingBankTransaction();
 

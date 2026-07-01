@@ -765,6 +765,8 @@ body:not(.dashboard-body) input[type="range"] {
     padding: 0;
     max-height: 220px;
     overflow: auto;
+    display: block !important;
+    min-height: 1px;
 }
 
 .bank-pending-item {
@@ -833,4 +835,11 @@ body:not(.dashboard-body) input[type="range"] {
     border-color: #034286;
     background: #034286;
     color: #ffffff;
+}
+
+.bank-pending-debug {
+    margin-top: 6px;
+    color: #9ca3af;
+    font-size: 0.7em;
+    text-align: left;
 }

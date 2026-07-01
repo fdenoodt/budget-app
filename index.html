@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=79">
+    <link rel="stylesheet" href="style.css?version=80">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -117,6 +117,7 @@
                 <span id="bank_pending_count" class="bank-pending-count">0</span>
             </div>
             <ul id="bank_pending_list" class="bank-pending-list"></ul>
+            <div id="bank_pending_debug" class="bank-pending-debug"></div>
         </div>
 
         <div id="profile_name" class="margin-side" style="text-align: left;">
@@ -257,8 +258,8 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="config.js?version=79"></script>
-<script src="script.js?version=79"></script>
+<script src="config.js?version=80"></script>
+<script src="script.js?version=80"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -318,7 +319,7 @@
 <script>
     <!-- PWA -->
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js?version=79')
+        navigator.serviceWorker.register('service-worker.js?version=80')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
             })
