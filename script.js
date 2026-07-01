@@ -1468,15 +1468,6 @@ const getPendingBankTransactionById = (id) => {
     return BANK_PENDING_TRANSACTIONS.find(tx => String(tx.id) === String(id)) || null;
 }
 
-const getPendingBankDescription = (tx) => {
-    const candidates = [
-        tx.remittance,
-        tx.counterparty,
-        tx.source
-    ].map(value => (value || '').trim()).filter(Boolean);
-    return candidates.find(value => !['payment', 'bank notification'].includes(value.toLowerCase())) || '';
-}
-
 const markSelectedPendingBankTransaction = () => {
     document.querySelectorAll('.bank-pending-item').forEach(item => {
         item.classList.toggle(
@@ -1498,10 +1489,7 @@ const fillPendingBankTransaction = (tx, options = {}) => {
     }
 
     const descriptionInput = document.getElementById('inp_description');
-    const description = getPendingBankDescription(tx);
-    if (descriptionInput && description && !descriptionInput.value.trim()) {
-        descriptionInput.value = description;
-    }
+    if (descriptionInput) descriptionInput.value = '';
 
     update();
     checkSubmit();
@@ -1605,7 +1593,7 @@ const renderPendingBankTransactions = () => {
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (debugEl) {
         const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
-        debugEl.textContent = `web 80 · app ${androidVersion}`;
+        debugEl.textContent = `web 81 · app ${androidVersion}`;
     }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
