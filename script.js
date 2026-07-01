@@ -11,6 +11,7 @@ const btn_submit = document.getElementById('btn_submit');
 
 let EXPENSES_ALL = null;
 let EXPENSES_BY_ID = new Map();
+let DUPLICATE_HISTORY_EXPENSES = [];
 let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
 let CURRENT_MONTHLY_ALLOWANCE = Infinity; // updated from server data
 let EXPENSES_SEARCH_QUERY = '';
@@ -364,6 +365,7 @@ function renderData(data) {
     new LineGraphs().display(monthlySaved, monthlyEarned, getMonthFromUrlParam()); // displays monthly saved and monthly earned graphs
 
     ALL_EXPENSES = expenses;
+    loadDuplicateHistoryExpenses();
     applyExpensesSearch(EXPENSES_SEARCH_QUERY);
     if (isAndroidPendingEnabled()) {
         fetchPendingBankTransactions();
@@ -1516,20 +1518,66 @@ window.handleAndroidPendingExpenseLaunch = (id) => {
     fetchPendingBankTransactions().then(applyQueuedPendingBankAutofill);
 }
 
+const parseExpenseDate = (dateValue) => {
+    if (!dateValue) return null;
+    const text = String(dateValue);
+    const isoParts = text.split('-');
+    if (isoParts.length === 3) {
+        const parsed = new Date(Number(isoParts[0]), Number(isoParts[1]) - 1, Number(isoParts[2]));
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const displayParts = text.split('/');
+    if (displayParts.length === 3) {
+        const parsed = new Date(Number(displayParts[2]), Number(displayParts[1]) - 1, Number(displayParts[0]));
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+const getDuplicateCandidateExpensePool = () => {
+    const byId = new Map();
+    [...(ALL_EXPENSES || []), ...(DUPLICATE_HISTORY_EXPENSES || [])].forEach(expense => {
+        byId.set(String(expense.id), expense);
+    });
+    return Array.from(byId.values());
+}
+
+const loadDuplicateHistoryExpenses = () => {
+    if (!isAndroidPendingEnabled() || getMonthFromUrlParam() !== 0) return Promise.resolve([]);
+    return betterFetch(`${url}?month=1`)
+        .then(response => response.json())
+        .then(result => {
+            DUPLICATE_HISTORY_EXPENSES = result.expenses || [];
+            renderPendingBankTransactions();
+            return DUPLICATE_HISTORY_EXPENSES;
+        })
+        .catch(error => {
+            console.warn('Could not load previous month expenses for duplicate detection', error);
+            DUPLICATE_HISTORY_EXPENSES = [];
+            return [];
+        });
+}
+
 const getRecentDuplicateCandidates = (tx) => {
-    if (!ALL_EXPENSES) return [];
+    const expensePool = getDuplicateCandidateExpensePool();
+    if (!expensePool.length) return [];
     const amount = Math.abs(parseBudgetNumber(tx.amount));
     const txDate = tx.booked_date || tx.value_date || null;
-    const minDate = new Date();
-    minDate.setMonth(minDate.getMonth() - 1);
+    const detectedDate = parseExpenseDate(txDate);
+    const minDate = detectedDate ? new Date(detectedDate) : new Date();
+    if (detectedDate) {
+        minDate.setDate(minDate.getDate() - 3);
+    } else {
+        minDate.setMonth(minDate.getMonth() - 1);
+    }
 
-    return ALL_EXPENSES
+    return expensePool
         .filter(expense => {
             if (!expense.date) return false;
-            const expenseDate = new Date(expense.date);
-            if (Number.isNaN(expenseDate.getTime()) || expenseDate < minDate) return false;
-            if (txDate) {
-                const detectedDate = new Date(txDate);
+            const expenseDate = parseExpenseDate(expense.date);
+            if (!expenseDate || expenseDate < minDate) return false;
+            if (detectedDate) {
                 const daysDiff = Math.abs(expenseDate - detectedDate) / (1000 * 60 * 60 * 24);
                 if (daysDiff > 3) return false;
             }
@@ -1593,7 +1641,7 @@ const renderPendingBankTransactions = () => {
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (debugEl) {
         const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
-        debugEl.textContent = `web 81 · app ${androidVersion}`;
+        debugEl.textContent = `web 82 · app ${androidVersion}`;
     }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
