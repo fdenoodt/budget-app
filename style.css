@@ -749,13 +749,6 @@ body:not(.dashboard-body) input[type="range"] {
     align-items: center;
     margin-bottom: 8px;
     font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    touch-action: manipulation;
-}
-
-.bank-pending-panel.is-collapsed .bank-pending-header {
-    margin-bottom: 0;
 }
 
 .bank-pending-count {
@@ -772,10 +765,6 @@ body:not(.dashboard-body) input[type="range"] {
     padding: 0;
     max-height: 220px;
     overflow: auto;
-}
-
-.bank-pending-panel.is-collapsed .bank-pending-list {
-    display: none;
 }
 
 .bank-pending-item {

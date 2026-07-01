@@ -18,7 +18,6 @@ let BANK_PENDING_TRANSACTIONS = [];
 let SELECTED_PENDING_BANK_TRANSACTION_ID = null;
 let SELECTED_PENDING_BANK_TRANSACTION_DATE = null;
 let BANK_SYNC_INTERVAL_ID = null;
-let BANK_PENDING_PANEL_EXPANDED = true;
 let PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID = null;
 
 
@@ -653,9 +652,10 @@ const getExpenesPerMainCategory = (expenses, incomeCategory) => {
     expenses = expenses.filter(expense => expense.category != incomeCategory);
 
     expenses.forEach(expense => {
-        const category = expense.category.toLowerCase();
+        const category = (expense.category || '').toLowerCase();
         const priceFabian = expense.price_fabian;
         const priceElisa = expense.price_elisa;
+        const myPrice = getName() === FABIAN ? priceFabian : priceElisa;
 
         // lowercase all items in list
         const basics_keys = categories_basics_keys.map(category => category.toLowerCase());
@@ -666,14 +666,14 @@ const getExpenesPerMainCategory = (expenses, incomeCategory) => {
         // category is in `categories_basics_keys`
         if (basics_keys.includes(category)) {
             // only my price
-            expensesBasics += getName() === FABIAN ? priceFabian : priceElisa;
+            expensesBasics += myPrice;
         } else if (fun_keys.includes(category)) {
-            expensesFun += getName() === FABIAN ? priceFabian : priceElisa;
+            expensesFun += myPrice;
         } else if (infreq_keys.includes(category)) {
-            expensesInfreq += getName() === FABIAN ? priceFabian : priceElisa;
+            expensesInfreq += myPrice;
         } else {
-            alert(`Category ${category} not found in categories_basics_keys, categories_fun_keys or categories_infreq_keys`)
-            raiseError(`Category ${category} not found in categories_basics_keys, categories_fun_keys or categories_infreq_keys`)
+            console.warn(`Unknown category ${category || '(blank)'}; counting as infrequent expense`, expense);
+            expensesInfreq += myPrice;
         }
     });
 
@@ -1330,7 +1330,7 @@ const updateExpensesAll = (expenses) => {
 
 
 const checkSubmit = () => {
-    if (inp_price.value !== '' && parseBudgetNumber(inp_price.value) !== 0 && data.category != '') {
+    if (inp_price.value !== '' && parseBudgetNumber(inp_price.value) !== 0 && isKnownCategory(data.category)) {
         btn_submit.disabled = false;
     } else {
         btn_submit.disabled = true;
@@ -1450,6 +1450,20 @@ const isAndroidPendingEnabled = () => !!window.BudgetAndroid;
 
 const getExpenseTotal = (expense) => Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
 
+function getAllConfiguredCategories() {
+    return [
+        ...(typeof categories_basics_keys !== 'undefined' ? categories_basics_keys : []),
+        ...(typeof categories_fun_keys !== 'undefined' ? categories_fun_keys : []),
+        ...(typeof categories_infreq_keys !== 'undefined' ? categories_infreq_keys : [])
+    ];
+}
+
+function isKnownCategory(category) {
+    if (!category) return false;
+    const normalized = String(category).trim().toLowerCase();
+    return getAllConfiguredCategories().some(item => item.toLowerCase() === normalized);
+}
+
 const getPendingBankTransactionById = (id) => {
     return BANK_PENDING_TRANSACTIONS.find(tx => String(tx.id) === String(id)) || null;
 }
@@ -1548,8 +1562,10 @@ const renderPendingBankTransactions = () => {
         listEl.innerHTML = '';
         return;
     }
-    if (panelEl) panelEl.style.display = '';
-    if (panelEl) panelEl.classList.toggle('is-collapsed', !BANK_PENDING_PANEL_EXPANDED);
+    if (panelEl) {
+        panelEl.style.display = '';
+        panelEl.classList.remove('is-collapsed');
+    }
 
     listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(tx => {
         const absAmount = Math.abs(parseBudgetNumber(tx.amount));
@@ -1582,16 +1598,6 @@ const renderPendingBankTransactions = () => {
     }).join('');
 
     markSelectedPendingBankTransaction();
-
-    if (panelEl && !panelEl.dataset.toggleInitialized) {
-        const headerEl = panelEl.querySelector('.bank-pending-header');
-        headerEl?.addEventListener('click', (event) => {
-            event.preventDefault();
-            BANK_PENDING_PANEL_EXPANDED = !BANK_PENDING_PANEL_EXPANDED;
-            panelEl.classList.toggle('is-collapsed', !BANK_PENDING_PANEL_EXPANDED);
-        });
-        panelEl.dataset.toggleInitialized = 'true';
-    }
 
     listEl.querySelectorAll('.bank-pending-item').forEach(item => {
         const id = item.dataset.bankId;
@@ -1835,6 +1841,13 @@ const setupBankImportUI = () => {
 const submit = () => {
     // send data to server
     const category = data.category;
+
+    if (!isKnownCategory(category)) {
+        alert('Please choose a category before submitting this expense.');
+        checkSubmit();
+        document.getElementById('div_categories')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
 
     let price_me = parseBudgetNumber(inp_price_me.value);
     let price_other = parseBudgetNumber(inp_price_other.value);
