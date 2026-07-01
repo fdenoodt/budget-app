@@ -18,6 +18,8 @@ let BANK_PENDING_TRANSACTIONS = [];
 let SELECTED_PENDING_BANK_TRANSACTION_ID = null;
 let SELECTED_PENDING_BANK_TRANSACTION_DATE = null;
 let BANK_SYNC_INTERVAL_ID = null;
+let BANK_PENDING_PANEL_EXPANDED = true;
+let PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID = null;
 
 
 const FABIAN = 'Fabian';
@@ -1448,6 +1450,70 @@ const isAndroidPendingEnabled = () => !!window.BudgetAndroid;
 
 const getExpenseTotal = (expense) => Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
 
+const getPendingBankTransactionById = (id) => {
+    return BANK_PENDING_TRANSACTIONS.find(tx => String(tx.id) === String(id)) || null;
+}
+
+const getPendingBankDescription = (tx) => {
+    const candidates = [
+        tx.remittance,
+        tx.counterparty,
+        tx.source
+    ].map(value => (value || '').trim()).filter(Boolean);
+    return candidates.find(value => !['payment', 'bank notification'].includes(value.toLowerCase())) || '';
+}
+
+const markSelectedPendingBankTransaction = () => {
+    document.querySelectorAll('.bank-pending-item').forEach(item => {
+        item.classList.toggle(
+            'is-selected',
+            String(item.dataset.bankId) === String(SELECTED_PENDING_BANK_TRANSACTION_ID)
+        );
+    });
+}
+
+const fillPendingBankTransaction = (tx, options = {}) => {
+    if (!tx) return false;
+
+    SELECTED_PENDING_BANK_TRANSACTION_ID = tx.id;
+    SELECTED_PENDING_BANK_TRANSACTION_DATE = tx.booked_date || tx.value_date || null;
+
+    const amount = Math.abs(parseBudgetNumber(tx.amount));
+    if (amount > 0) {
+        inp_price.value = formatBudgetNumber(amount);
+    }
+
+    const descriptionInput = document.getElementById('inp_description');
+    const description = getPendingBankDescription(tx);
+    if (descriptionInput && description && !descriptionInput.value.trim()) {
+        descriptionInput.value = description;
+    }
+
+    update();
+    checkSubmit();
+    markSelectedPendingBankTransaction();
+
+    if (options.scrollToForm) {
+        document.getElementById('div_price')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return true;
+}
+
+const applyQueuedPendingBankAutofill = () => {
+    if (!PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID) return;
+    const tx = getPendingBankTransactionById(PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID);
+    if (!tx) return;
+    fillPendingBankTransaction(tx, { scrollToForm: true });
+    PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID = null;
+}
+
+window.handleAndroidPendingExpenseLaunch = (id) => {
+    if (!id) return;
+    PENDING_BANK_TRANSACTION_TO_AUTOFILL_ID = String(id);
+    fetchPendingBankTransactions().then(applyQueuedPendingBankAutofill);
+}
+
 const getRecentDuplicateCandidates = (tx) => {
     if (!ALL_EXPENSES) return [];
     const amount = Math.abs(parseBudgetNumber(tx.amount));
@@ -1483,6 +1549,7 @@ const renderPendingBankTransactions = () => {
         return;
     }
     if (panelEl) panelEl.style.display = '';
+    if (panelEl) panelEl.classList.toggle('is-collapsed', !BANK_PENDING_PANEL_EXPANDED);
 
     listEl.innerHTML = BANK_PENDING_TRANSACTIONS.map(tx => {
         const absAmount = Math.abs(parseBudgetNumber(tx.amount));
@@ -1499,7 +1566,7 @@ const renderPendingBankTransactions = () => {
                 </div>
             ` : '';
         return `
-            <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx.id))}">
+            <li class="bank-pending-item" data-bank-id="${escapeHtml(String(tx.id))}" tabindex="0">
                 <div class="bank-pending-main">
                     <span class="bank-pending-merchant">${escapeHtml(merchant)}</span>
                     <span class="bank-pending-amount">EUR ${absAmount.toFixed(2)}</span>
@@ -1514,30 +1581,45 @@ const renderPendingBankTransactions = () => {
         `;
     }).join('');
 
+    markSelectedPendingBankTransaction();
+
+    if (panelEl && !panelEl.dataset.toggleInitialized) {
+        const headerEl = panelEl.querySelector('.bank-pending-header');
+        headerEl?.addEventListener('click', (event) => {
+            event.preventDefault();
+            BANK_PENDING_PANEL_EXPANDED = !BANK_PENDING_PANEL_EXPANDED;
+            panelEl.classList.toggle('is-collapsed', !BANK_PENDING_PANEL_EXPANDED);
+        });
+        panelEl.dataset.toggleInitialized = 'true';
+    }
+
     listEl.querySelectorAll('.bank-pending-item').forEach(item => {
         const id = item.dataset.bankId;
         const tx = BANK_PENDING_TRANSACTIONS.find(t => String(t.id) === String(id));
         if (!tx) return;
 
-        item.querySelector('[data-action="use"]')?.addEventListener('click', () => {
-            SELECTED_PENDING_BANK_TRANSACTION_ID = tx.id;
-            SELECTED_PENDING_BANK_TRANSACTION_DATE = tx.booked_date || tx.value_date || null;
-
-            inp_price.value = formatBudgetNumber(Math.abs(parseBudgetNumber(tx.amount)));
-            update();
-            checkSubmit();
-
-            const descriptionInput = document.getElementById('inp_description');
-            if (descriptionInput) {
-                descriptionInput.value = '';
-                descriptionInput.focus();
-            }
+        item.addEventListener('click', (event) => {
+            if (event.target.closest('.bank-pending-action')) return;
+            fillPendingBankTransaction(tx, { scrollToForm: true });
+        });
+        item.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            fillPendingBankTransaction(tx, { scrollToForm: true });
         });
 
-        item.querySelector('[data-action="dismiss"]')?.addEventListener('click', () => {
+        item.querySelector('[data-action="use"]')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            fillPendingBankTransaction(tx, { scrollToForm: true });
+        });
+
+        item.querySelector('[data-action="dismiss"]')?.addEventListener('click', (event) => {
+            event.stopPropagation();
             dismissPendingBankTransaction(tx.id);
         });
     });
+
+    applyQueuedPendingBankAutofill();
 }
 
 const fetchPendingBankTransactions = () => {
