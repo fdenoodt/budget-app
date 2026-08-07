@@ -1,4 +1,4 @@
-const CACHE_VERSION = '83';
+const CACHE_VERSION = '84';
 const CACHE_NAME = `budget-app-v${CACHE_VERSION}`;
 const PRECACHE_URLS = [
     './',

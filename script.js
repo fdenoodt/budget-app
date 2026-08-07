@@ -1658,7 +1658,7 @@ const renderPendingBankTransactions = () => {
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (debugEl) {
         const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
-        debugEl.textContent = `web 83 · app ${androidVersion}`;
+        debugEl.textContent = `web 84 · app ${androidVersion}`;
     }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
@@ -2165,8 +2165,13 @@ const setupCalculatorKeypad = () => {
             if (!enabled) setCalcInputReadonly(input, false);
         });
         if (modeButton) {
+            const modeLabel = enabled ? 'Use phone keyboard' : 'Use calculator';
             modeButton.setAttribute('aria-pressed', String(enabled));
-            modeButton.textContent = enabled ? '⌨ Use phone keyboard' : '🧮 Use calculator';
+            modeButton.setAttribute('aria-label', modeLabel);
+            modeButton.setAttribute('title', modeLabel);
+            modeButton.innerHTML = enabled
+                ? '<i class="fa fa-keyboard-o" aria-hidden="true"></i>'
+                : '<i class="fa fa-calculator" aria-hidden="true"></i>';
         }
 
         if (!enabled) {

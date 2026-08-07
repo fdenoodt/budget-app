@@ -216,6 +216,7 @@ input[type=date]:hover {
 #div_price {
     font-size: 4em;
     text-align: center;
+    position: relative;
 }
 
 #inp_price {
@@ -223,27 +224,29 @@ input[type=date]:hover {
     text-align: center;
 }
 
-.keyboard-mode-row {
-    display: flex;
-    justify-content: center;
-    margin-top: -16px;
-    margin-bottom: 12px;
-}
-
 body:not(.dashboard-body) .keyboard-mode-button {
+    position: absolute;
+    top: 50%;
+    right: 2%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
     margin: 0;
-    padding: 7px 12px;
-    border: 1px solid rgba(31, 42, 68, 0.22);
-    border-radius: 999px;
-    background: #f3f6fa;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
     color: #1f2a44;
     box-shadow: none;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    opacity: 0.58;
+    z-index: 2;
 }
 
 body:not(.dashboard-body) .keyboard-mode-button[aria-pressed="true"] {
-    background: #1f2a44;
-    color: #ffffff;
+    border-color: rgba(31, 42, 68, 0.18);
+    background: rgba(31, 42, 68, 0.08);
+    opacity: 0.9;
 }
 
 
