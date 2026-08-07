@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=84">
+    <link rel="stylesheet" href="style.css?version=85">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -37,6 +37,9 @@
             <div style="display: flex; gap: 8px; margin-left: auto;">
                 <a class="dashboard-icon" href="dashboard.html" title="Open dashboard" aria-label="Open dashboard">
                     <i class="fa fa-line-chart" aria-hidden="true"></i>
+                </a>
+                <a class="dashboard-icon" href="weekly-review.html" title="Open weekly review" aria-label="Open weekly review">
+                    <i class="fa fa-bell-o" aria-hidden="true"></i>
                 </a>
                 <a class="dashboard-icon" href="monthly.html" title="Open monthly view" aria-label="Open monthly view">
                     <i class="fa fa-calendar" aria-hidden="true"></i>
@@ -262,8 +265,8 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="config.js?version=84"></script>
-<script src="script.js?version=84"></script>
+<script src="config.js?version=85"></script>
+<script src="script.js?version=85"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -323,7 +326,7 @@
 <script>
     <!-- PWA -->
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js?version=84')
+        navigator.serviceWorker.register('service-worker.js?version=85')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
             })

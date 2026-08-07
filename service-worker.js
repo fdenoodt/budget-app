@@ -1,8 +1,11 @@
-const CACHE_VERSION = '84';
+const CACHE_VERSION = '85';
 const CACHE_NAME = `budget-app-v${CACHE_VERSION}`;
 const PRECACHE_URLS = [
     './',
     './index.html',
+    './weekly-review.html',
+    `./weekly-review.css?version=${CACHE_VERSION}`,
+    `./weekly-review.js?version=${CACHE_VERSION}`,
     `./style.css?version=${CACHE_VERSION}`,
     `./script.js?version=${CACHE_VERSION}`,
     `./config.js?version=${CACHE_VERSION}`,
