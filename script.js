@@ -9,7 +9,7 @@ const inp_price_other = document.getElementById('inp_price_other');
 const lbl_name = document.getElementById('lbl_name');
 const btn_submit = document.getElementById('btn_submit');
 
-let EXPENSES_ALL = null;
+let ALL_EXPENSES = [];
 let EXPENSES_BY_ID = new Map();
 let DUPLICATE_HISTORY_EXPENSES = [];
 let CURRENT_MONTHLY_RENT = Infinity; // updated from server data
@@ -279,10 +279,14 @@ const getMonthFromUrlParam = () => { // returns 0, -1, ... indicating how many m
 }
 
 const fillDescriptions = (descriptions) => {
-    const descriptionshtml = document.getElementById('descriptions')
-    for (let i = 0; i < descriptions.length; i++) {
+    const descriptionshtml = document.getElementById('descriptions');
+    if (!descriptionshtml) return;
+    descriptionshtml.replaceChildren();
+    const suggestions = [...new Set((descriptions || []).map(item => String(item).trim()).filter(Boolean))]
+        .slice(0, 8);
+    for (let i = 0; i < suggestions.length; i++) {
         const option = document.createElement('option')
-        option.value = descriptions[i]
+        option.value = suggestions[i]
         descriptionshtml.appendChild(option)
     }
 }
@@ -315,6 +319,8 @@ function renderData(data) {
 
     // append monthlyExpenses to expenses
     monthlyExpenses.forEach(expense => {
+        expense.is_monthly = true;
+        expense.monthly_expense_id = expense.id;
         expenses.push(expense);
         expense.id = -1; // mark as monthly expense
     });
@@ -1538,17 +1544,25 @@ const parseExpenseDate = (dateValue) => {
 const getDuplicateCandidateExpensePool = () => {
     const byId = new Map();
     [...(ALL_EXPENSES || []), ...(DUPLICATE_HISTORY_EXPENSES || [])].forEach(expense => {
-        byId.set(String(expense.id), expense);
+        const key = expense.is_monthly
+            ? `monthly:${expense.monthly_expense_id ?? expense.id}:${expense.description || ''}`
+            : `expense:${expense.id}:${expense.date || ''}`;
+        byId.set(key, expense);
     });
     return Array.from(byId.values());
 }
 
 const loadDuplicateHistoryExpenses = () => {
     if (!isAndroidPendingEnabled() || getMonthFromUrlParam() !== 0) return Promise.resolve([]);
-    return betterFetch(`${url}?month=1`)
+    return betterFetch(`${url}?month=-1`)
         .then(response => response.json())
         .then(result => {
-            DUPLICATE_HISTORY_EXPENSES = result.expenses || [];
+            const previousMonthly = (result.monthly_expenses || []).map(expense => ({
+                ...expense,
+                is_monthly: true,
+                monthly_expense_id: expense.id
+            }));
+            DUPLICATE_HISTORY_EXPENSES = [...(result.expenses || []), ...previousMonthly];
             renderPendingBankTransactions();
             return DUPLICATE_HISTORY_EXPENSES;
         })
@@ -1574,16 +1588,18 @@ const getRecentDuplicateCandidates = (tx) => {
 
     return expensePool
         .filter(expense => {
-            if (!expense.date) return false;
+            if (Math.abs(getExpenseTotal(expense) - amount) >= 0.01) return false;
+            if (expense.is_monthly) return true;
+            if (!expense.date || expense.date === '00-00') return false;
             const expenseDate = parseExpenseDate(expense.date);
             if (!expenseDate || expenseDate < minDate) return false;
             if (detectedDate) {
                 const daysDiff = Math.abs(expenseDate - detectedDate) / (1000 * 60 * 60 * 24);
                 if (daysDiff > 3) return false;
             }
-            return Math.abs(getExpenseTotal(expense) - amount) < 0.01;
+            return true;
         })
-        .slice(0, 3);
+        .slice(0, 5);
 }
 
 const normalizePendingBankTransaction = (tx, index) => {
@@ -1611,7 +1627,8 @@ const renderPendingBankTransactionRow = (rawTx, index) => {
             <div class="bank-pending-duplicates">
                 Possible duplicate: ${duplicateCandidates.map(expense => {
                     const total = Math.abs((expense.price_fabian || 0) + (expense.price_elisa || 0));
-                    return `${escapeHtml(expense.description || expense.category || 'Expense')} · EUR ${total.toFixed(2)} · ${escapeHtml(formatDateForDisplay(expense.date || ''))}`;
+                    const when = expense.is_monthly ? 'Monthly' : formatDateForDisplay(expense.date || '');
+                    return `${escapeHtml(expense.description || expense.category || 'Expense')} · EUR ${total.toFixed(2)}${when ? ' · ' + escapeHtml(when) : ''}`;
                 }).join(', ')}
             </div>
         ` : '';
@@ -1641,7 +1658,7 @@ const renderPendingBankTransactions = () => {
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (debugEl) {
         const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
-        debugEl.textContent = `web 82 · app ${androidVersion}`;
+        debugEl.textContent = `web 83 · app ${androidVersion}`;
     }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
@@ -2059,17 +2076,15 @@ const openPageSearch = () => {
 const setupCalculatorKeypad = () => {
     const keypad = document.getElementById('calc-keypad');
     const display = document.getElementById('calc_display');
+    const modeButton = document.getElementById('btn_keyboard_mode');
     if (!keypad || !display) return;
 
     let calcTargetInput = null;
     let calcExpression = '';
     let lastShowAt = 0;
+    let calculatorMode = false;
 
-    const shouldUseCustomKeypad = () => {
-        return window.matchMedia('(pointer: coarse)').matches ||
-            window.matchMedia('(hover: none)').matches ||
-            /iPad|iPhone|iPod/.test(navigator.userAgent);
-    };
+    const shouldUseCustomKeypad = () => calculatorMode;
 
     const updateCalcDisplay = () => {
         display.textContent = calcExpression || '0';
@@ -2139,6 +2154,27 @@ const setupCalculatorKeypad = () => {
         keypad.classList.add('is-hidden');
         keypad.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('calc-open');
+    };
+
+    const setCalculatorMode = (enabled, focusInput = false) => {
+        calculatorMode = enabled;
+        ['inp_price', 'inp_price_me', 'inp_price_other'].forEach((id) => {
+            const input = document.getElementById(id);
+            if (!input) return;
+            input.inputMode = enabled ? 'none' : 'decimal';
+            if (!enabled) setCalcInputReadonly(input, false);
+        });
+        if (modeButton) {
+            modeButton.setAttribute('aria-pressed', String(enabled));
+            modeButton.textContent = enabled ? '⌨ Use phone keyboard' : '🧮 Use calculator';
+        }
+
+        if (!enabled) {
+            hideCalculator();
+            if (focusInput) inp_price.focus();
+        } else if (focusInput) {
+            showCalculatorForInput(inp_price);
+        }
     };
 
     const canAddDecimal = (expr) => {
@@ -2234,6 +2270,14 @@ const setupCalculatorKeypad = () => {
             }
         });
     });
+
+    modeButton?.addEventListener('click', () => {
+        setCalculatorMode(!calculatorMode, true);
+    });
+
+    // The phone's normal decimal keyboard is the default. The custom calculator
+    // is only activated after an explicit tap on the mode button.
+    setCalculatorMode(false);
 
     ['inp_price', 'inp_price_me', 'inp_price_other'].forEach((id) => {
         const input = document.getElementById(id);

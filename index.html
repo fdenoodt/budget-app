@@ -18,7 +18,7 @@
 
 
     <link rel="icon" type="image/png" href="fav.png"/>
-    <link rel="stylesheet" href="style.css?version=82">
+    <link rel="stylesheet" href="style.css?version=83">
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -46,8 +46,14 @@
 
         <div id="div_price" class="margin">
             <!-- round up to 2 decimals -->
-            <span>€</span> <input type="text" name="inp_price" id="inp_price" autofocus placeholder="0,00" inputmode="none"
+            <span>€</span> <input type="text" name="inp_price" id="inp_price" placeholder="0,00" inputmode="decimal"
                                   class="form-control">
+        </div>
+
+        <div class="keyboard-mode-row margin-side">
+            <button type="button" id="btn_keyboard_mode" class="keyboard-mode-button" aria-pressed="false">
+                🧮 Use calculator
+            </button>
         </div>
 
         <div class="margin">
@@ -57,10 +63,10 @@
             </div>
 
             <div class="put_textsboxes_side_by_side vert-margin-sm">
-                <input type="text" name="inp_price_me" id="inp_price_me" placeholder="Me" inputmode="none"
+                <input type="text" name="inp_price_me" id="inp_price_me" placeholder="Me" inputmode="decimal"
                        class="form-control">
                 &nbsp;
-                <input type="text" name="inp_price_other" id="inp_price_other" placeholder="Other" inputmode="none"
+                <input type="text" name="inp_price_other" id="inp_price_other" placeholder="Other" inputmode="decimal"
                        class="form-control">
             </div>
         </div>
@@ -258,8 +264,8 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="config.js?version=82"></script>
-<script src="script.js?version=82"></script>
+<script src="config.js?version=83"></script>
+<script src="script.js?version=83"></script>
 
 <script>
     $('[data-toggle="tooltip"]').tooltip({trigger: 'hover click touchstart'}).on('mouseleave', function () {
@@ -319,7 +325,7 @@
 <script>
     <!-- PWA -->
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js?version=82')
+        navigator.serviceWorker.register('service-worker.js?version=83')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
             })
