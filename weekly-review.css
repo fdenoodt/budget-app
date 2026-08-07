@@ -99,9 +99,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .trend-row { display: grid; grid-template-columns: 72px 1fr 72px; gap: 10px; align-items: center; width: 100%; padding: 3px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .trend-row.is-selected { font-weight: 700; }
 .trend-label { font-size: 0.77rem; color: var(--muted); }
-.trend-track { height: 9px; background: #edf0f5; border-radius: 99px; overflow: hidden; }
-.trend-fill { height: 100%; background: var(--blue); border-radius: inherit; min-width: 2px; }
+.trend-track { display: block; position: relative; height: 9px; background: #edf0f5; border-radius: 99px; overflow: hidden; }
+.trend-fill { display: block; height: 100%; background: var(--blue); border-radius: inherit; }
 .trend-fill.over { background: var(--red); }
+.trend-allowance-marker { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: 0.55; }
 .trend-value { text-align: right; font-size: 0.8rem; }
 
 .transaction-row { display: grid; grid-template-columns: 82px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }

@@ -74,7 +74,7 @@ function renderMonth(month) {
     document.getElementById('safePerDay').textContent = `${formatCurrency(month.safe_to_spend_per_day)} / day`;
 
     const status = document.getElementById('paceStatus');
-    status.textContent = month.remaining < 0 ? 'Over allowance' : month.on_pace ? 'On pace' : 'Ahead of pace';
+    status.textContent = month.remaining < 0 ? 'Over allowance' : month.on_pace ? 'On pace' : 'Above expected pace';
     status.className = `pace-status ${month.on_pace && month.remaining >= 0 ? 'is-good' : 'is-warning'}`;
     const spendPercent = month.allowance > 0 ? Math.min(100, month.spent / month.allowance * 100) : 0;
     const expectedPercent = month.allowance > 0 ? Math.min(100, month.expected_spend_by_today / month.allowance * 100) : 0;
@@ -148,7 +148,10 @@ function renderMonthlyTrend(months) {
     const max = Math.max(...months.flatMap(month => [month.spent, month.allowance]), 1);
     container.innerHTML = months.map(month => `<div class="trend-row">
         <span class="trend-label">${escapeHtml(month.label)}</span>
-        <span class="trend-track"><span class="trend-fill ${month.spent > month.allowance ? 'over' : ''}" style="width:${month.spent / max * 100}%"></span></span>
+        <span class="trend-track">
+            <span class="trend-fill ${month.spent > month.allowance ? 'over' : ''}" style="width:${month.spent / max * 100}%"></span>
+            <span class="trend-allowance-marker" style="left:${Math.min(99.5, month.allowance / max * 100)}%" title="Allowance: ${escapeHtml(formatCurrency(month.allowance))}"></span>
+        </span>
         <span class="trend-value">${formatCurrency(month.spent)}</span>
     </div>`).join('');
 }

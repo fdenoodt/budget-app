@@ -1658,7 +1658,7 @@ const renderPendingBankTransactions = () => {
     countEl.textContent = String(BANK_PENDING_TRANSACTIONS.length);
     if (debugEl) {
         const androidVersion = window.BudgetAndroid?.getAppVersionName?.() || 'web';
-        debugEl.textContent = `web 85 · app ${androidVersion}`;
+        debugEl.textContent = `web 86 · app ${androidVersion}`;
     }
     if (BANK_PENDING_TRANSACTIONS.length === 0) {
         if (panelEl) panelEl.style.display = 'none';
